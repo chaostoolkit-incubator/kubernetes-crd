@@ -1,0 +1,79 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chaostoolkit-resources-templates
+data:
+  chaostoolkit-sa.yaml: |-
+    apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: chaostoolkit
+
+  chaostoolkit-role.yaml: |-
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: chaostoolkit-experiment
+    rules:
+    - apiGroups:
+      - ""
+      resources:
+      - pods
+      verbs:
+      - "create"
+      - "get"
+      - "delete"
+      - "list"
+
+  chaostoolkit-role-binding.yaml: |-
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: chaostoolkit-experiment
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: chaostoolkit-experiment
+    subjects:
+    - kind: ServiceAccount
+      name: chaostoolkit
+
+  chaostoolkit-pod.yaml: |-
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: chaostoolkit
+      labels:
+        app: chaostoolkit
+    spec:
+      restartPolicy: Never
+      serviceAccountName: chaostoolkit
+      containers:
+      - name: chaostoolkit
+        image: chaostoolkit/chaostoolkit
+        command:
+        - "/bin/sh" 
+        args:
+        - "-c"
+        - "/usr/local/bin/chaos run ${EXPERIMENT_URL} && exit $?"
+        env:
+        - name: CHAOSTOOLKIT_IN_POD
+          value: "true"
+        envFrom:
+        - configMapRef:
+            name: chaostoolkit-env
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - name: chaostoolkit-settings
+          mountPath: /home/svc/.chaostoolkit/
+      volumes:
+      - name: chaostoolkit-settings
+        secret:
+          secretName: chaostoolkit-settings

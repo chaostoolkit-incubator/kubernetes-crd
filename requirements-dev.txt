@@ -1,0 +1,10 @@
+pytest
+pylama
+coverage
+pytest-cov
+pytest-sugar
+requests-mock
+pytest-asyncio
+asynctest
+wheel
+better_exceptions

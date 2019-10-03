@@ -1,0 +1,27 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chaostoolkit-crd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chaostoolkit
+  template:
+    metadata:
+      labels:
+        app: chaostoolkit
+    spec:
+      serviceAccountName: chaostoolkit-crd
+      containers:
+      - name: crd
+        image: chaostoolkit/k8scrd:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
