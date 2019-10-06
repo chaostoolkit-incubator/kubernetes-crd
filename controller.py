@@ -13,7 +13,7 @@ Resource = Dict[str, Any]
 ResourceChunk = Dict[str, Any]
 
 
-@kopf.on.create('chaostoolkit.org', 'v1', 'chaosexperiments')
+@kopf.on.create('chaostoolkit.org', 'v1', 'chaosexperiments')  #noqa: C901
 async def create_chaos_experiment(
         meta: ResourceChunk, body: Dict[str, Any], spec: ResourceChunk,
         namespace: str, logger: logging.Logger, **kwargs) -> NoReturn:
@@ -23,35 +23,46 @@ async def create_chaos_experiment(
     v1 = client.CoreV1Api()
     v1rbac = client.RbacAuthorizationV1Api()
 
-    ns = spec.get("namespace", namespace)
-    logger.info(f"chaostoolkit resources will be created in namespace '{ns}'")
-
-    name_suffix = generate_name_suffix()
-
     cm_pod_spec_name = spec.get("template", {}).get(
         "name", "chaostoolkit-resources-templates")
     cm = v1.read_namespaced_config_map(
         namespace=namespace, name=cm_pod_spec_name)
 
+    keep_resources_on_delete = spec.get("keep_resources_on_delete", False)
+    if keep_resources_on_delete:
+        logger.info("Resources will be kept even when the CRO is deleted")
+
+    ns, ns_tpl = create_ns(v1, cm, spec, logger=logger)
+    if not keep_resources_on_delete:
+        kopf.adopt(ns_tpl, owner=body)
+    logger.info(f"chaostoolkit resources will be created in namespace '{ns}'")
+
+    name_suffix = generate_name_suffix()
+    logger.info(f"Suffix for resource names will be '-{name_suffix}'")
+
     sa_tpl = create_sa(v1, cm, spec, ns, name_suffix, logger=logger)
     if sa_tpl:
-        kopf.adopt(sa_tpl, owner=body)
+        if not keep_resources_on_delete:
+            kopf.adopt(sa_tpl, owner=body)
         logger.info(f"Created service account")
 
     role_tpl = create_role(v1rbac, cm, spec, ns, name_suffix, logger=logger)
     if role_tpl:
-        kopf.adopt(role_tpl, owner=body)
+        if not keep_resources_on_delete:
+            kopf.adopt(role_tpl, owner=body)
         logger.info(f"Created role")
 
     role_binding_tpl = create_role_binding(
         v1rbac, cm, spec, ns, name_suffix, logger=logger)
     if role_binding_tpl:
-        kopf.adopt(role_binding_tpl, owner=body)
+        if not keep_resources_on_delete:
+            kopf.adopt(role_binding_tpl, owner=body)
         logger.info(f"Created rolebinding")
 
     pod_tpl = create_pod(v1, cm, spec, ns, name_suffix)
     if pod_tpl:
-        kopf.adopt(pod_tpl, owner=body)
+        if not keep_resources_on_delete:
+            kopf.adopt(pod_tpl, owner=body)
         logger.info("Chaos Toolkit started")
 
 
@@ -175,6 +186,24 @@ def set_settings_secret_name(pod_tpl: Dict[str, Any], secret_name: str):
             break
 
 
+def create_ns(api: client.CoreV1Api, configmap: Resource,
+              cro_spec: ResourceChunk,
+              logger: logging.Logger) -> Union[str, Resource]:
+    ns_name = cro_spec.get("namespace", "chaostoolkit-run")
+    tpl = yaml.safe_load(configmap.data['chaostoolkit-ns.yaml'])
+    tpl["metadata"]["name"] = ns_name
+    try:
+        api.create_namespace(body=tpl)
+        return ns_name, tpl
+    except ApiException as e:
+        if e.status == 409:
+            logger.info(
+                f"Namespace '{ns_name}' already exists. Let's continue...")
+        else:
+            raise kopf.PermanentError(
+                f"Failed to create namespace: {str(e)}")
+
+
 def create_sa(api: client.CoreV1Api, configmap: Resource,
               cro_spec: ResourceChunk, ns: str, name_suffix: str,
               logger: logging.Logger):
@@ -220,8 +249,8 @@ def create_role(api: client.RbacAuthorizationV1Api, configmap: Resource,
 def create_role_binding(api: client.RbacAuthorizationV1Api,
                         configmap: Resource, cro_spec: ResourceChunk, ns: str,
                         name_suffix: str, logger: logging.Logger):
-    role_name = cro_spec.get("role", {}).get("name")
-    if not role_name:
+    role_bind_name = cro_spec.get("role", {}).get("bind")
+    if not role_bind_name:
         tpl = yaml.safe_load(configmap.data['chaostoolkit-role-binding.yaml'])
         role_binding_name = tpl["metadata"]["name"]
         role_binding_name = f"{role_binding_name}-{name_suffix}"

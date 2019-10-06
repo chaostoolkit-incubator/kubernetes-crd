@@ -4,6 +4,12 @@ kind: ConfigMap
 metadata:
   name: chaostoolkit-resources-templates
 data:
+  chaostoolkit-ns.yaml: |-
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: chaostoolkit-run
+
   chaostoolkit-sa.yaml: |-
     apiVersion: v1
     kind: ServiceAccount

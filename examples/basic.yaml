@@ -18,4 +18,5 @@ metadata:
   name: my-chaos-exp
   namespace: chaostoolkit-crd
 spec:
+  keep_resources_on_delete: true
   namespace: chaostoolkit-run

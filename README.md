@@ -1,6 +1,6 @@
-# Kubernetes CRD for running Chaos Toolkit experiments on-demand
+# Kubernetes CRD/operator for running Chaos Toolkit experiments on-demand
 
-This repository contains a Kubernetes controller to run Chaos Toolkit
+This repository contains a Kubernetes operator to control Chaos Toolkit
 experiments on-demand by submitting custom-resource objects.
 
 ## How to deploy?
@@ -71,11 +71,6 @@ A good example is as follows:
 ```yaml
 ---
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: chaostoolkit-run
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: chaostoolkit-env
@@ -93,7 +88,7 @@ spec:
 ```
 
 We decide to execute those chaostoolkit in a namespace called
-`chaostoolkit-run` so we create it first.
+`chaostoolkit-run`. It will be created on the fly.
 
 Then, we create a configmap that contains environment variables that will
 be populated into the chaostoolkit pod. They will be available to your
@@ -107,8 +102,177 @@ You may decide to change various aspects of the final pod (such as passing
 settings as secrets, changing the roles allowed to the pod, even overide
 the entire pod template).
 
-To be documented.
+### Create the namespace for generated Kubernetes resources
 
+You may create the namespace in which the resources will be deployed:
+
+```yaml
+---
+apiVersion: chaostoolkit.org/v1
+kind: ChaosToolkitExperiment
+metadata:
+  name: my-chaos-exp
+  namespace: chaostoolkit-crd
+spec:
+  namespace: my-chaostoolkit-run
+```
+
+If the namespace already exists, a message will be logged but this will not
+abort the operation.
+
+### Keep generated resources even when the CRO is deleted
+
+When you delete the `ChaosToolkitExperiment` resource, all the allocated
+resources are deleted too (namespace, pod, ...). To prevent this, you may
+set the `keep_resources_on_delete` property. In that case, you are responsible
+to cleanup all resources.
+
+```yaml
+---
+apiVersion: chaostoolkit.org/v1
+kind: ChaosToolkitExperiment
+metadata:
+  name: my-chaos-exp
+  namespace: chaostoolkit-crd
+spec:
+  namespace: chaostoolkit-run
+  keep_resources_on_delete: true
+```
+
+### Pass Chaos Toolkit environment values
+
+You may have declared configuration (or even secrets) to be read from the
+process environment. You should pass them as follows:
+
+```yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chaostoolkit-env
+  namespace: chaostoolkit-run
+data:
+  EXPERIMENT_URL: "https://raw.githubusercontent.com/Lawouach/dummy/master/experiments/token.json"
+```
+
+All the data of the config map will be injected as-is to the chaostoolkit pod.
+
+### Pass Chaos Toolkit settings as a Kubernetes secret
+
+You may provide your own [settings](settings) to Chaos Toolkit, by setting a
+secret in Kubernetes.
+
+[settings]: https://docs.chaostoolkit.org/reference/usage/cli/#configure-the-chaos-toolkit
+
+For instance, assuming a settings file, named `settings.yaml`:
+
+```
+$ kubectl -n chaostoolkit-run \
+    create secrets chaostoolkit-settings \
+    --from-file=settings.yaml
+```
+
+Note, if you haven't ever created an execution via this CRD, you may need to
+create the `chaostoolkit-run` namespace in which the chaostoolkit pods will
+be started.
+
+Now, you can enable the settings as a secret like this:
+
+
+```yaml
+---
+apiVersion: chaostoolkit.org/v1
+kind: ChaosToolkitExperiment
+metadata:
+  name: my-chaos-exp
+  namespace: chaostoolkit-crd
+spec:
+  namespace: chaostoolkit-run
+  pod:
+    settings:
+      enabled: true
+```
+
+The default name for that secret is `chaostoolkit-settings` but you can change
+this as follows:
+
+
+```yaml
+---
+apiVersion: chaostoolkit.org/v1
+kind: ChaosToolkitExperiment
+metadata:
+  name: my-chaos-exp
+  namespace: chaostoolkit-crd
+spec:
+  namespace: chaostoolkit-run
+  pod:
+    settings:
+      enabled: true
+      secretName: my-super-secret
+```
+
+### Pass your own role to bind to the service account
+
+If your cluster has enabled RBAC, then the operator automatically binds a basic
+role to the service account associated with the chaostoolkit pod. That role
+allows your experiment to create/get/list/delete other pods in the same
+namespace.
+
+You probably have more specific requirements, here is how to do it:
+
+```yaml
+---
+apiVersion: chaostoolkit.org/v1
+kind: ChaosToolkitExperiment
+metadata:
+  name: my-chaos-exp
+  namespace: chaostoolkit-crd
+spec:
+  namespace: chaostoolkit-run
+  role:
+    name: my-role
+```
+
+The property `name` should be set to the name of the role you have created
+in that namespace. The service account associated with the pod will be bound
+to that role.
+
+### Pass a full pod template
+
+Sometimes, the default of this operator aren't just flexible enough. You may
+pass your own pod template as follows:
+
+```yaml
+---
+apiVersion: chaostoolkit.org/v1
+kind: ChaosToolkitExperiment
+metadata:
+  name: my-chaos-exp
+  namespace: chaostoolkit-crd
+spec:
+  namespace: chaostoolkit-run
+  pod:
+    template:
+      apiVersion: v1
+      kind: Pod
+      metadata:
+      name: chaostoolkit
+        labels:
+          app: chaostoolkit
+      spec:
+        restartPolicy: Never
+        serviceAccountName: chaostoolkit
+        containers:
+        - name: chaostoolkit
+          image: chaostoolkit/chaostoolkit
+          command:
+          - "/bin/sh" 
+          args:
+          - "-c"
+          - "/usr/local/bin/chaos run ${EXPERIMENT_URL} && exit $?"
+          ...
+```
 
 ## Contribute
 
