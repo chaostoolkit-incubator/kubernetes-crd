@@ -1,10 +1,5 @@
 ---
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: chaostoolkit-run
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: chaostoolkit-env
@@ -18,5 +13,4 @@ metadata:
   name: my-chaos-exp
   namespace: chaostoolkit-crd
 spec:
-  keep_resources_on_delete: true
   namespace: chaostoolkit-run
