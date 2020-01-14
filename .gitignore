@@ -112,3 +112,6 @@ journal.json
 
 test.txt
 test.json
+
+.kube/
+.pytest-kind/

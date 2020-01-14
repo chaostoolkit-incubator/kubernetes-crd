@@ -29,7 +29,7 @@ your own specific parameters for your cluster.
 Anyway, assuming you want to try one as-is. Simply run the following command:
 
 ```
-$ kustomize build overlays/generic-rbac | kubectl apply -f -
+$ kustomize build manifests/overlays/generic-rbac | kubectl apply -f -
 ```
 
 This would use the RBAC variant.

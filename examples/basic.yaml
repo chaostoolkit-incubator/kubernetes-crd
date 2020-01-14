@@ -1,5 +1,10 @@
 ---
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: chaostoolkit-run
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: chaostoolkit-env
