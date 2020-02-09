@@ -60,7 +60,7 @@ async def create_chaos_experiment(
         logger.info(f"Created rolebinding")
 
     cm_tpl = await create_experiment_env_config_map(
-        api, ns, rpl.get("pod", {}).get("env", {}).get(
+        v1, ns, spec.get("pod", {}).get("env", {}).get(
             "configMapName", "chaostoolkit-env"))
     if cm_tpl and not keep_resources_on_delete:
         kopf.adopt(cm_tpl, owner=body)
@@ -217,7 +217,7 @@ def remove_env_path_config_map(pod_tpl: Dict[str, Any]):
         if container["name"] == "chaostoolkit":
             for e in container["env"]:
                 if e["name"] == "EXPERIMENT_PATH":
-                    container["env"].pop(e)
+                    container["env"].remove(e)
                     break
 
 
@@ -405,27 +405,36 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
             "enabled", False)
         settings_secret_name = pod_spec.get("settings", {}).get(
             "secretName", "chaostoolkit-settings")
-        experiment_as_file = pod_spec.get("asFile", True)
+        experiment_as_file = pod_spec.get(
+            "experiment", {}).get("asFile", True)
         experiment_config_map_name = pod_spec.get("experiment", {}).get(
             "configMapName", "chaostoolkit-experiment")
 
         set_image_name(tpl, image_name)
 
         if not env_cm_enabled:
+            logger.info("Removing default env configmap volume")
             remove_env_config_map(tpl)
         elif env_cm_name:
+            logger.info(f"Env config map named '{env_cm_name}'")
             set_env_config_map_name(tpl, env_cm_name)
 
         if not settings_secret_enabled:
+            logger.info("Removing default settings secret volume")
             remove_settings_secret(tpl)
         elif settings_secret_name:
+            logger.info(
+                f"Settings secret volume named '{settings_secret_name}'")
             set_settings_secret_name(tpl, settings_secret_name)
 
-        if not experiment_as_file:
+        if experiment_as_file:
+            logger.info(
+                f"Experiment config map named '{experiment_config_map_name}'")
+            set_experiment_config_map_name(tpl, experiment_config_map_name)
+        else:
+            logger.info("Removing default experiment config map volume")
             remove_experiment_volume(tpl)
             remove_env_path_config_map(tpl)
-        else:
-            set_experiment_config_map_name(tpl, experiment_config_map_name)
 
     set_ns(tpl, ns)
     set_pod_name(tpl, name_suffix=name_suffix)

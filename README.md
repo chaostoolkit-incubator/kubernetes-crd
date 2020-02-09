@@ -163,7 +163,8 @@ metadata:
   namespace: chaostoolkit-crd
 spec:
   pod:
-    asFile: false
+    experiment:
+        asFile: false
 ```
 
 ### Create the namespace for generated Kubernetes resources
