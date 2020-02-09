@@ -73,10 +73,55 @@ A good example is as follows:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: chaostoolkit-env
+  name: chaostoolkit-experiment
   namespace: chaostoolkit-run
 data:
-  EXPERIMENT_URL: "https://raw.githubusercontent.com/Lawouach/dummy/master/experiments/token.json"
+  experiment.json: |
+    {
+        "title": "...",
+    }
+---
+apiVersion: chaostoolkit.org/v1
+kind: ChaosToolkitExperiment
+metadata:
+  name: my-chaos-exp
+  namespace: chaostoolkit-crd
+```
+
+We decide to execute those chaostoolkit in a namespace called
+`chaostoolkit-run`. It will be created on the fly.
+We create a configmap that contains the experiment as a file entry.
+Finally, we declare our experiment resource that the operator listens for.
+
+This will create, as soon as possible, a pod running the Chaos Toolkit with
+the given experiment in the `chaostoolkit-run` namespace.
+
+Obviously, you can create the `chaostoolkit-experiment` as follows too:
+
+```console
+$ kubectl -n chaostoolkit-run create configmap chaostoolkit-experiment \
+    --from-file=experiment.json=./experiment.json
+```
+
+In the example above, the name of the config map holding the experiment is
+the default value `chaostoolkit-experiment`. Usually, you'll want a more
+unique name since you'll probably run multiple experiments from the
+`chaostoolkit-run` namespace.
+
+In that case, do it as follows:
+
+```yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chaostoolkit-experiment-1234
+  namespace: chaostoolkit-run
+data:
+  experiment.json: |
+    {
+        "title": "...",
+    }
 ---
 apiVersion: chaostoolkit.org/v1
 kind: ChaosToolkitExperiment
@@ -84,23 +129,42 @@ metadata:
   name: my-chaos-exp
   namespace: chaostoolkit-crd
 spec:
-  namespace: chaostoolkit-run
+  pod:
+    experiment:
+      configMapName: chaostoolkit-experiment-1234
 ```
-
-We decide to execute those chaostoolkit in a namespace called
-`chaostoolkit-run`. It will be created on the fly.
-
-Then, we create a configmap that contains environment variables that will
-be populated into the chaostoolkit pod. They will be available to your
-Chaos Toolkit experiment that way.
-
-Finally, we declare our experiment resource and simply state its namespace.
 
 ## Various configurations
 
 You may decide to change various aspects of the final pod (such as passing
 settings as secrets, changing the roles allowed to the pod, even overide
 the entire pod template).
+
+### Run the experiment from a URL
+
+Let's say you store your experiments remotely and make them available over
+HTTP. You can tell the Chaos Toolkit to load it from there rather than from
+a local file.
+
+```yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chaostoolkit-env
+  namespace: chaostoolkit-run
+data:
+  EXPERIMENT_URL: https://example.com/experiment.json
+---
+apiVersion: chaostoolkit.org/v1
+kind: ChaosToolkitExperiment
+metadata:
+  name: my-chaos-exp
+  namespace: chaostoolkit-crd
+spec:
+  pod:
+    asFile: false
+```
 
 ### Create the namespace for generated Kubernetes resources
 
@@ -270,7 +334,7 @@ spec:
           - "/bin/sh" 
           args:
           - "-c"
-          - "/usr/local/bin/chaos run ${EXPERIMENT_URL} && exit $?"
+          - "/usr/local/bin/chaos run ${EXPERIMENT_PATH-$EXPERIMENT_URL} && exit $?"
           ...
 ```
 

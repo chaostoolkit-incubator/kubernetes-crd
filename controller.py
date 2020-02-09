@@ -59,6 +59,12 @@ async def create_chaos_experiment(
             kopf.adopt(role_binding_tpl, owner=body)
         logger.info(f"Created rolebinding")
 
+    cm_tpl = await create_experiment_env_config_map(
+        api, ns, rpl.get("pod", {}).get("env", {}).get(
+            "configMapName", "chaostoolkit-env"))
+    if cm_tpl and not keep_resources_on_delete:
+        kopf.adopt(cm_tpl, owner=body)
+
     pod_tpl = await create_pod(v1, cm, spec, ns, name_suffix)
     if pod_tpl:
         if not keep_resources_on_delete:
@@ -156,6 +162,32 @@ def remove_settings_secret(pod_tpl: Dict[str, Any]):
         spec.pop("volumes", None)
 
 
+def remove_experiment_volume(pod_tpl: Dict[str, Any]):
+    """
+    Remove the experiment volume and volume mounts from the pod.
+
+    This is the case when the experiment is passed as a URL via
+    `EXPERIMENT_URL`.
+    """
+    spec = pod_tpl["spec"]
+    for container in spec["containers"]:
+        if container["name"] == "chaostoolkit":
+            for vm in container["volumeMounts"]:
+                if vm["name"] == "chaostoolkit-experiment":
+                    container["volumeMounts"].remove(vm)
+                    if len(container["volumeMounts"]) == 0:
+                        container.pop("volumeMounts", None)
+                    break
+
+    for volume in spec["volumes"]:
+        if volume["name"] == "chaostoolkit-experiment":
+            spec["volumes"].remove(volume)
+            break
+
+    if len(spec["volumes"]) == 0:
+        spec.pop("volumes", None)
+
+
 def remove_env_config_map(pod_tpl: Dict[str, Any]):
     """
     Remove the en mapping to the configmap, used to pass variables to the
@@ -175,6 +207,20 @@ def remove_env_config_map(pod_tpl: Dict[str, Any]):
                     break
 
 
+def remove_env_path_config_map(pod_tpl: Dict[str, Any]):
+    """
+    Remove the `EXPERIMENT_PATH` environment path because the experiment
+    was set to be a URL via `EXPERIMENT_URL`.
+    """
+    spec = pod_tpl["spec"]
+    for container in spec["containers"]:
+        if container["name"] == "chaostoolkit":
+            for e in container["env"]:
+                if e["name"] == "EXPERIMENT_PATH":
+                    container["env"].pop(e)
+                    break
+
+
 def set_settings_secret_name(pod_tpl: Dict[str, Any], secret_name: str):
     """
     Set the secret volume and volume mounts from the pod.
@@ -186,6 +232,17 @@ def set_settings_secret_name(pod_tpl: Dict[str, Any], secret_name: str):
             break
 
 
+def set_experiment_config_map_name(pod_tpl: Dict[str, Any], cm_name: str):
+    """
+    Set the experiment config map volume and volume mounts from the pod.
+    """
+    spec = pod_tpl["spec"]
+    for volume in spec["volumes"]:
+        if volume["name"] == "chaostoolkit-experiment":
+            volume["configMap"]["name"] = cm_name
+            break
+
+
 def run_async(func):
     @wraps(func)
     async def run(*args, loop=None, executor=None, **kwargs):
@@ -194,6 +251,26 @@ def run_async(func):
         pfunc = partial(func, *args, **kwargs)
         return await loop.run_in_executor(executor, pfunc)
     return run
+
+
+@run_async
+def create_experiment_env_config_map(v1: client.CoreV1Api(), namespace: str,
+                                     name: str = "chaostoolkit-env"):
+    """
+    Create the default configmap to hold experiment environment variables,
+    in case it wasn't already created by the user.
+
+    If it already exists, we do not return it so that the operator does not
+    take its ownership.
+    """
+    logger = logging.getLogger('kopf.objects')
+    try:
+        v1.read_namespaced_config_map(
+            namespace=namespace, name="chaostoolkit-env")
+    except ApiException:
+        logger.info("Creating default `chaostoolkit-env` configmap")
+        body = client.V1ConfigMap(metadata=client.V1ObjectMeta(name=name))
+        return v1.create_namespaced_config_map(namespace, body)
 
 
 @run_async
@@ -328,6 +405,9 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
             "enabled", False)
         settings_secret_name = pod_spec.get("settings", {}).get(
             "secretName", "chaostoolkit-settings")
+        experiment_as_file = pod_spec.get("asFile", True)
+        experiment_config_map_name = pod_spec.get("experiment", {}).get(
+            "configMapName", "chaostoolkit-experiment")
 
         set_image_name(tpl, image_name)
 
@@ -340,6 +420,12 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
             remove_settings_secret(tpl)
         elif settings_secret_name:
             set_settings_secret_name(tpl, settings_secret_name)
+
+        if not experiment_as_file:
+            remove_experiment_volume(tpl)
+            remove_env_path_config_map(tpl)
+        else:
+            set_experiment_config_map_name(tpl, experiment_config_map_name)
 
     set_ns(tpl, ns)
     set_pod_name(tpl, name_suffix=name_suffix)

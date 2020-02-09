@@ -16,7 +16,7 @@ spec:
       serviceAccountName: chaostoolkit-crd
       containers:
       - name: crd
-        image: chaostoolkit/k8scrd:latest
+        image: chaostoolkit/k8scrd:0.2.0
         imagePullPolicy: Always
         resources:
           requests:

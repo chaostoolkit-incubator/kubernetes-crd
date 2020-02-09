@@ -62,10 +62,12 @@ data:
         - "/bin/sh" 
         args:
         - "-c"
-        - "/usr/local/bin/chaos run ${EXPERIMENT_URL} && exit $?"
+        - "/usr/local/bin/chaos run ${EXPERIMENT_PATH-$EXPERIMENT_URL} && exit $?"
         env:
         - name: CHAOSTOOLKIT_IN_POD
           value: "true"
+        - name: EXPERIMENT_PATH
+          value: "/home/svc/experiment.json"
         envFrom:
         - configMapRef:
             name: chaostoolkit-env
@@ -79,7 +81,15 @@ data:
         volumeMounts:
         - name: chaostoolkit-settings
           mountPath: /home/svc/.chaostoolkit/
+          readOnly: true
+        - name: chaostoolkit-experiment
+          mountPath: /home/svc/experiment.json
+          subPath: experiment.json
+          readOnly: true
       volumes:
       - name: chaostoolkit-settings
         secret:
           secretName: chaostoolkit-settings
+      - name: chaostoolkit-experiment
+        configMap:
+          name: chaostoolkit-experiment

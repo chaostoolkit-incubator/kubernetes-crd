@@ -7,15 +7,29 @@ metadata:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: chaostoolkit-env
+  name: chaostoolkit-experiment
   namespace: chaostoolkit-run
 data:
-  EXPERIMENT_URL: "https://raw.githubusercontent.com/Lawouach/dummy/master/experiments/token.json"
+  experiment.json: |
+    {
+      "version": "1.0.0",
+      "title": "Hello world!",
+      "description": "Say hello world.",
+      "method": [
+        {
+          "type": "action",
+          "name": "say-hello",
+          "provider": {
+            "type": "process",
+            "path": "echo",
+            "arguments": "hello"
+          }
+        }
+      ]
+    }
 ---
 apiVersion: chaostoolkit.org/v1
 kind: ChaosToolkitExperiment
 metadata:
   name: my-chaos-exp
   namespace: chaostoolkit-crd
-spec:
-  namespace: chaostoolkit-run

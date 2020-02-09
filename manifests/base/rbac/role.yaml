@@ -32,6 +32,9 @@ rules:
   - configmaps
   verbs:
   - get
+  - create
+  - delete
+  - list
 - apiGroups:
   - ""
   resources:
