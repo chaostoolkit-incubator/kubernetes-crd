@@ -323,8 +323,8 @@ spec:
       kind: Pod
       metadata:
       name: chaostoolkit
-        labels:
-          app: chaostoolkit
+      labels:
+        app: chaostoolkit
       spec:
         restartPolicy: Never
         serviceAccountName: chaostoolkit
