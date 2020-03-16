@@ -339,6 +339,22 @@ spec:
           ...
 ```
 
+
+### List running Chaos Toolkit experiments
+
+To list the running Chaos Toolkit experiments, use the `chaosexperiment` custom
+resource name:
+
+```
+$ kubectl -n chaostoolkit-crd get chaosexperiments
+```
+
+To get details about the experiment, you can describe it:
+
+```
+$ kubectl -n chaostoolkit-crd describe chaosexperiment my-chaos-exp
+```
+
 ## Contribute
 
 If you wish to contribute more functions to this package, you are more than
