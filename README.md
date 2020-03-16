@@ -233,13 +233,13 @@ For instance, assuming a settings file, named `settings.yaml`:
 
 ```
 $ kubectl -n chaostoolkit-run \
-    create secrets chaostoolkit-settings \
+    create secret generic chaostoolkit-settings \
     --from-file=settings.yaml
 ```
 
 Note, if you haven't ever created an execution via this CRD, you may need to
 create the `chaostoolkit-run` namespace in which the chaostoolkit pods will
-be started.
+be started: `$ kubectl create namespace chaostoolkit-run`.
 
 Now, you can enable the settings as a secret like this:
 
