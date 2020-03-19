@@ -44,6 +44,7 @@ data:
     subjects:
     - kind: ServiceAccount
       name: chaostoolkit
+      namespace: chaostoolkit-crd
 
   chaostoolkit-pod.yaml: |-
     apiVersion: v1
@@ -58,6 +59,7 @@ data:
       containers:
       - name: chaostoolkit
         image: chaostoolkit/chaostoolkit
+        imagePullPolicy: Always
         command:
         - "/bin/sh" 
         args:

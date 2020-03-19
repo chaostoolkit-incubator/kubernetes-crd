@@ -4,6 +4,36 @@ kind: Namespace
 metadata:
   name: chaostoolkit-run
 ---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: chaostoolkit-experiment-pods
+  namespace: chaostoolkit-run
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - "create"
+  - "get"
+  - "delete"
+  - "list"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: chaostoolkit-experiment-from-default
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: chaostoolkit-experiment-pods
+subjects:
+- kind: ServiceAccount
+  name: chaostoolkit
+  namespace: chaostoolkit-run
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -33,3 +63,9 @@ kind: ChaosToolkitExperiment
 metadata:
   name: my-chaos-exp
   namespace: chaostoolkit-crd
+spec:
+  rolebindings:
+    - name: chaostoolkit-experiment-from-default
+      ns: default
+  pod:
+    image: lawouach/tc

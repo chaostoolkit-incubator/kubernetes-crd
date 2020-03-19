@@ -57,6 +57,7 @@ rules:
   - get
   - patch
   - list
+  - update
 - apiGroups:
   - chaostoolkit.org
   resources:

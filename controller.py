@@ -59,11 +59,11 @@ async def create_chaos_experiment(
             kopf.adopt(role_binding_tpl, owner=body)
         logger.info(f"Created rolebinding")
 
-    cm_tpl = await create_experiment_env_config_map(
+    await create_experiment_env_config_map(
         v1, ns, spec.get("pod", {}).get("env", {}).get(
             "configMapName", "chaostoolkit-env"))
-    if cm_tpl and not keep_resources_on_delete:
-        kopf.adopt(cm_tpl, owner=body)
+
+    await update_role_bindings(v1rbac, spec, ns, name_suffix)
 
     pod_tpl = await create_pod(v1, cm, spec, ns, name_suffix)
     if pod_tpl:
@@ -259,9 +259,6 @@ def create_experiment_env_config_map(v1: client.CoreV1Api(), namespace: str,
     """
     Create the default configmap to hold experiment environment variables,
     in case it wasn't already created by the user.
-
-    If it already exists, we do not return it so that the operator does not
-    take its ownership.
     """
     logger = logging.getLogger('kopf.objects')
     try:
@@ -270,7 +267,7 @@ def create_experiment_env_config_map(v1: client.CoreV1Api(), namespace: str,
     except ApiException:
         logger.info("Creating default `chaostoolkit-env` configmap")
         body = client.V1ConfigMap(metadata=client.V1ObjectMeta(name=name))
-        return v1.create_namespaced_config_map(namespace, body)
+        v1.create_namespaced_config_map(namespace, body)
 
 
 @run_async
@@ -384,6 +381,23 @@ def create_role_binding(api: client.RbacAuthorizationV1Api,
 
 
 @run_async
+def update_role_bindings(api: client.RbacAuthorizationV1Api,
+                         cro_spec: ResourceChunk, ns: str, name_suffix: str):
+    logger = logging.getLogger('kopf.objects')
+    bindings_to_update = cro_spec.get("rolebindings", [])
+    for rb in bindings_to_update:
+        binding_name = rb["name"]
+        binding_ns = rb.get("ns", "default")
+        logger.info(f"Updating role-binding '{binding_name}'")
+        binding = api.read_namespaced_role_binding(
+            name=binding_name, namespace=binding_ns)
+        for subject in binding.subjects:
+            subject.name = f"{subject.name}-{name_suffix}"
+        api.create_namespaced_role_binding(
+            namespace=binding_ns, body=binding)
+
+
+@run_async
 def create_pod(api: client.CoreV1Api, configmap: Resource,
                cro_spec: ResourceChunk, ns: str, name_suffix: str):
     logger = logging.getLogger('kopf.objects')
@@ -396,8 +410,7 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
     # if not, let's use the default one
     if not tpl:
         tpl = yaml.safe_load(configmap.data['chaostoolkit-pod.yaml'])
-        image_name = pod_spec.get("image", {}).get(
-            "name", "chaostoolkit/chaostoolkit")
+        image_name = pod_spec.get("image", "chaostoolkit/chaostoolkit")
         env_cm_name = pod_spec.get("env", {}).get(
             "configMapName", "chaostoolkit-env")
         env_cm_enabled = pod_spec.get("env", {}).get("enabled", True)
