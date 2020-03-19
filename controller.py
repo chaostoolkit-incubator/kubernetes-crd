@@ -400,8 +400,7 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
     # if not, let's use the default one
     if not tpl:
         tpl = yaml.safe_load(configmap.data['chaostoolkit-pod.yaml'])
-        image_name = pod_spec.get("image", {}).get(
-            "name", "chaostoolkit/chaostoolkit")
+        image_name = pod_spec.get("image", "chaostoolkit/chaostoolkit")
         env_cm_name = pod_spec.get("env", {}).get(
             "configMapName", "chaostoolkit-env")
         env_cm_enabled = pod_spec.get("env", {}).get("enabled", True)
