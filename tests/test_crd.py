@@ -102,3 +102,8 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
         "kind": "ServiceAccount",
         "name": "chaostoolkit"
     }]
+
+    ctk_pod = yaml.safe_load(resource["data"]["chaostoolkit-pod.yaml"])
+    assert ctk_pod["apiVersion"] == "v1"
+    assert ctk_pod["kind"] == "Pod"
+    assert ctk_pod["metadata"]["name"] == "chaostoolkit"
