@@ -290,6 +290,7 @@ def create_ns(api: client.CoreV1Api, configmap: Resource,
     ns_name = cro_spec.get("namespace", "chaostoolkit-run")
     tpl = yaml.safe_load(configmap.data['chaostoolkit-ns.yaml'])
     tpl["metadata"]["name"] = ns_name
+    logger.debug(f"Creating namespace with template:\n{tpl}")
     try:
         api.create_namespace(body=tpl)
         return ns_name, tpl
@@ -315,6 +316,7 @@ def create_sa(api: client.CoreV1Api, configmap: Resource,
         sa_name = f"{sa_name}-{name_suffix}"
         tpl["metadata"]["name"] = sa_name
         set_ns(tpl, ns)
+        logger.debug(f"Creating service account with template:\n{tpl}")
         try:
             api.create_namespaced_service_account(body=tpl, namespace=ns)
             return tpl
@@ -337,6 +339,7 @@ def create_role(api: client.RbacAuthorizationV1Api, configmap: Resource,
         role_name = f"{role_name}-{name_suffix}"
         tpl["metadata"]["name"] = role_name
         set_ns(tpl, ns)
+        logger.debug(f"Creating role with template:\n{tpl}")
         try:
             api.create_namespaced_role(body=tpl, namespace=ns)
             return tpl
@@ -371,6 +374,7 @@ def create_role_binding(api: client.RbacAuthorizationV1Api,
         tpl["roleRef"]["name"] = role_name
 
         set_ns(tpl, ns)
+        logger.debug(f"Creating role binding with template:\n{tpl}")
         try:
             api.create_namespaced_role_binding(body=tpl, namespace=ns)
             return tpl
@@ -440,6 +444,7 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
     set_pod_name(tpl, name_suffix=name_suffix)
     set_sa_name(tpl, name_suffix=name_suffix)
 
+    logger.debug(f"Creating pod with template:\n{tpl}")
     pod = api.create_namespaced_pod(body=tpl, namespace=ns)
     logger.info(f"Pod {pod.metadata.self_link} created in ns '{ns}'")
 
