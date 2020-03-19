@@ -3,3 +3,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: chaostoolkit-crd
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: chaostoolkit-run
