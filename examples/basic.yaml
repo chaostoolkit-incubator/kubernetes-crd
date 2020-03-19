@@ -33,3 +33,5 @@ kind: ChaosToolkitExperiment
 metadata:
   name: my-chaos-exp
   namespace: chaostoolkit-crd
+spec:
+  namespace: chaostoolkit-run
