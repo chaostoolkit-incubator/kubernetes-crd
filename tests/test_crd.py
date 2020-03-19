@@ -14,8 +14,12 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
         "role": "chaosengineering"
     }
 
-
     resource = generic[1]
+    assert resource["apiVersion"] == "v1"
+    assert resource["kind"] == "Namespace"
+    assert resource["metadata"]["name"] == "chaostoolkit-run"
+
+    resource = generic[2]
     assert resource["apiVersion"] == "apiextensions.k8s.io/v1beta1"
     assert resource["kind"] == "CustomResourceDefinition"
     assert resource["metadata"]["name"] == "chaosexperiments.chaostoolkit.org"
@@ -40,7 +44,7 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
         "shortNames": ["ctk", "ctks"]
     }
     
-    resource = generic[2]
+    resource = generic[3]
     assert resource["apiVersion"] == "v1"
     assert resource["kind"] == "ServiceAccount"
     assert resource["metadata"]["name"] == "chaostoolkit-crd"
@@ -51,7 +55,7 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
         "role": "chaosengineering"
     }
 
-    resource = generic[3]
+    resource = generic[4]
     assert resource["apiVersion"] == "v1"
     assert resource["kind"] == "ConfigMap"
     assert resource["metadata"]["name"] == "chaostoolkit-resources-templates"
