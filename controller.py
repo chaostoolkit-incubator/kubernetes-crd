@@ -32,8 +32,9 @@ async def create_chaos_experiment(
         logger.info("Resources will be kept even when the CRO is deleted")
 
     ns, ns_tpl = await create_ns(v1, cm, spec)
-    if not keep_resources_on_delete:
-        kopf.adopt(ns_tpl, owner=body)
+    if ns_tpl:
+        if not keep_resources_on_delete:
+            kopf.adopt(ns_tpl, owner=body)
     logger.info(f"chaostoolkit resources will be created in namespace '{ns}'")
 
     name_suffix = generate_name_suffix()
@@ -286,6 +287,10 @@ def get_config_map(v1: client.CoreV1Api(), spec: Dict[str, Any],
 @run_async
 def create_ns(api: client.CoreV1Api, configmap: Resource,
               cro_spec: ResourceChunk) -> Union[str, Resource]:
+    """
+    If it already exists, we do not return it so that the operator does not
+    take its ownership.
+    """
     logger = logging.getLogger('kopf.objects')
     ns_name = cro_spec.get("namespace", "chaostoolkit-run")
     tpl = yaml.safe_load(configmap.data['chaostoolkit-ns.yaml'])
@@ -299,7 +304,7 @@ def create_ns(api: client.CoreV1Api, configmap: Resource,
             logger.info(
                 f"Namespace '{ns_name}' already exists. Let's continue...",
                 exc_info=False)
-            return ns_name, tpl
+            return ns_name, None
         else:
             raise kopf.PermanentError(
                 f"Failed to create namespace: {str(e)}")
