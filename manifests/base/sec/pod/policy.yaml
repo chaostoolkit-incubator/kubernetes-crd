@@ -2,7 +2,7 @@
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: chaostoolkit
+  name: chaostoolkit-crd
 spec:
   privileged: false
   hostNetwork: false
@@ -30,7 +30,7 @@ rules:
   resources:
   - podsecuritypolicies
   resourceNames:
-  - chaostoolkit
+  - chaostoolkit-crd
   verbs:
   - use
 ---
@@ -51,3 +51,25 @@ subjects:
   kind: Group
   name: system:serviceaccounts
   namespace: chaostoolkit-crd
+---
+# This is the PSP for containers running the chaos experiments (not the CRD)
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: chaostoolkit-run
+spec:
+  privileged: false
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  runAsUser:
+    rule: MustRunAsNonRoot
+  fsGroup:
+    rule: RunAsAny
+  volumes:
+  - configMap
+  - secret
