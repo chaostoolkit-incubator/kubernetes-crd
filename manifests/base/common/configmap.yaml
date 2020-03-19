@@ -58,6 +58,7 @@ data:
       containers:
       - name: chaostoolkit
         image: chaostoolkit/chaostoolkit
+        imagePullPolicy: Always
         command:
         - "/bin/sh" 
         args:
