@@ -244,6 +244,19 @@ def set_experiment_config_map_name(pod_tpl: Dict[str, Any], cm_name: str):
             break
 
 
+def set_chaos_cmd_args(pod_tpl: Dict[str, Any], cmd_args: List[str]):
+    """
+    Set the command line arguments for the chaos command
+    """
+    spec = pod_tpl["spec"]
+    for container in spec["containers"]:
+        if container["name"] == "chaostoolkit":
+            args_as_str = ' '.join(cmd_args)
+            new_cmd = "/usr/local/bin/chaos {args} && exit $?".format(
+                args=args_as_str)
+            container["args"][-1] = new_cmd
+
+
 def run_async(func):
     @wraps(func)
     async def run(*args, loop=None, executor=None, **kwargs):
@@ -417,6 +430,7 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
             "experiment", {}).get("asFile", True)
         experiment_config_map_name = pod_spec.get("experiment", {}).get(
             "configMapName", "chaostoolkit-experiment")
+        cmd_args = pod_spec.get("chaosArgs", [])
 
         set_image_name(tpl, image_name)
 
@@ -443,6 +457,13 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
             logger.info("Removing default experiment config map volume")
             remove_experiment_volume(tpl)
             remove_env_path_config_map(tpl)
+
+        if cmd_args:
+            logger.info(
+                f"Override default chaos command arguments: "
+                f"$ chaos {' '.join(cmd_args)}")
+            set_chaos_cmd_args(tpl, cmd_args)
+
 
     set_ns(tpl, ns)
     set_pod_name(tpl, name_suffix=name_suffix)
