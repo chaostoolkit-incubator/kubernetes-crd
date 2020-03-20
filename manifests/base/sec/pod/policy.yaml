@@ -47,9 +47,12 @@ subjects:
   apiGroup: rbac.authorization.k8s.io
   name: system:authenticated
   namespace: chaostoolkit-crd
-- apiGroup: rbac.authorization.k8s.io
-  kind: Group
-  name: system:serviceaccounts
+#- apiGroup: rbac.authorization.k8s.io
+#  kind: Group
+#  name: system:serviceaccounts
+#  namespace: chaostoolkit-crd
+- kind: ServiceAccount
+  name: chaostoolkit-crd
   namespace: chaostoolkit-crd
 ---
 # This is the PSP for containers running the chaos experiments (not the CRD)
