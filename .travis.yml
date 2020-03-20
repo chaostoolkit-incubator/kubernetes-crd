@@ -1,0 +1,30 @@
+dist: xenial
+language: python
+python:
+- 3.7
+install:
+- pip install -r requirements.txt -r requirements-dev.txt
+services:
+- docker
+
+env:
+  global:
+  - DOCKER_USER_NAME: chaostoolkit
+  - secure: YXJix2bpKt6dJJs086MOokRUSsDd7RvShOrDO/yfFSDnS+iQA2IuRoxWQG2C9UYCdd7qWis/CsuLIv8wnOE9F4K+h5IUvmxJJCRN+jCDJv+LMPnn3i3SHW3CacKhAN9mXkUrw8DE4D/GwhaItPkH3G+BJ/YlVKpJov8C6LoGAEg/qClVmgB6tKMxCtN/I6fN0d/obbY/Ujq9BM4xARn4QPjl+5hKFTin5W607GpFCQY3hJALM7PIt/NYBJfCUFUA164/9S2J2t4V8G4L/gXgI/V5ml88M9aZna3uX1qZpvzAlPoTJGS3y56lbSo9PvAbF8/DJL4IrGq+2IWHXMFYg+bQiY4Iv539UX/KZq5JAPafDLv7vTclSJeEBjLZBqFLQSGG6OQR7gIjEStTucMlFA9XbEotOC5ts27ZDQPw8pCS/G30cVRQHHQH2AgeGPiYtF7hOZy8zCH41E7RWmSZ9gK5GKCMhjcnyLR/a/ANeQEr4kEdu3Wr7BbzLOoUHzPPIZl4kdDd9n8HAk1G3/Kqpcv+x/tTWPeoFaJE9NWc3MuOW9U7vx7N2XKZ1JZKoihauBL24zHKpHSffvuiK/yDQYTVaDXsn3AP+lZKNOMDam0p+uA2BV9nrf82sJvB5ffop/2JylrRb/U7OS5mzCH0prULV4dcAh69JiGLUZspQuw=
+
+script:
+- bash ci.bash
+
+branches:
+  only:
+  - master
+
+notifications:
+  webhooks:
+    urls:
+    - https://webhook.atomist.com/atomist/travis/teams/T76U4GPGF
+    on_cancel: always
+    on_error: always
+    on_start: always
+    on_failure: always
+    on_success: always
