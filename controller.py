@@ -15,7 +15,7 @@ Resource = Dict[str, Any]
 ResourceChunk = Dict[str, Any]
 
 
-@kopf.on.create('chaostoolkit.org', 'v1', 'chaosexperiments')  #noqa: C901
+@kopf.on.create('chaostoolkit.org', 'v1', 'chaosexperiments')  # noqa: C901
 async def create_chaos_experiment(
         meta: ResourceChunk, body: Dict[str, Any], spec: ResourceChunk,
         namespace: str, logger: logging.Logger, **kwargs) -> NoReturn:
@@ -463,7 +463,6 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
                 f"Override default chaos command arguments: "
                 f"$ chaos {' '.join(cmd_args)}")
             set_chaos_cmd_args(tpl, cmd_args)
-
 
     set_ns(tpl, ns)
     set_pod_name(tpl, name_suffix=name_suffix)
