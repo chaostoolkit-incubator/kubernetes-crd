@@ -2,6 +2,8 @@ from typing import List
 
 import yaml
 
+from controller import set_chaos_cmd_args
+
 
 def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
     resource = generic[0]
@@ -107,3 +109,13 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
     assert ctk_pod["apiVersion"] == "v1"
     assert ctk_pod["kind"] == "Pod"
     assert ctk_pod["metadata"]["name"] == "chaostoolkit"
+
+
+def test_set_chaos_cmd_args(generic: List['Resource']):
+    resource = generic[4]
+    ctk_pod = yaml.safe_load(resource["data"]["chaostoolkit-pod.yaml"])
+
+    set_chaos_cmd_args(ctk_pod, cmd_args=[
+        "--verbose", "run", "/home/svc/experiment.json"])
+    assert "chaos --verbose run /home/svc/experiment.json" in \
+           ctk_pod["spec"]["containers"][0]["args"][-1]

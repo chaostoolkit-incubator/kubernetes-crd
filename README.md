@@ -340,6 +340,31 @@ spec:
 ```
 
 
+### Override the default chaos command arguments
+
+The pod template executes the `chaos run` command by default. You may want to
+extends or change the sub-command to execute when running the pod. You can
+define the `chaos` arguments as follow:
+
+
+```yaml
+---
+apiVersion: chaostoolkit.org/v1
+kind: ChaosToolkitExperiment
+metadata:
+  name: my-chaos-exp
+  namespace: chaostoolkit-crd
+spec:
+  namespace: chaostoolkit-run
+  pod:
+    chaosArgs:
+    - --verbose
+    - run
+    - --dry
+    - ${EXPERIMENT_PATH-$EXPERIMENT_URL}
+```
+
+
 ### List running Chaos Toolkit experiments
 
 To list the running Chaos Toolkit experiments, use the `chaosexperiment` custom
