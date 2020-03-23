@@ -115,3 +115,5 @@ test.json
 
 .kube/
 .pytest-kind/
+
+.idea

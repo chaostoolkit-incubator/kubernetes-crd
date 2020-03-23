@@ -60,7 +60,7 @@ data:
         image: chaostoolkit/chaostoolkit
         imagePullPolicy: Always
         command:
-        - "/bin/sh" 
+        - "/bin/sh"
         args:
         - "-c"
         - "/usr/local/bin/chaos run ${EXPERIMENT_PATH-$EXPERIMENT_URL} && exit $?"
