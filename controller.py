@@ -35,6 +35,7 @@ async def create_chaos_experiment(
     if ns_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(ns_tpl, owner=body)
+            await update_namespace(v1, ns, ns_tpl)
     logger.info(f"chaostoolkit resources will be created in namespace '{ns}'")
 
     name_suffix = generate_name_suffix()
@@ -44,6 +45,7 @@ async def create_chaos_experiment(
     if sa_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(sa_tpl, owner=body)
+            await update_sa(v1, ns, sa_tpl)
         logger.info(f"Created service account")
 
     role_tpl = await create_role(
@@ -51,6 +53,7 @@ async def create_chaos_experiment(
     if role_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(role_tpl, owner=body)
+            await update_role(v1rbac, ns, role_tpl)
         logger.info(f"Created role")
 
     role_binding_tpl = await create_role_binding(
@@ -58,6 +61,7 @@ async def create_chaos_experiment(
     if role_binding_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(role_binding_tpl, owner=body)
+            await update_role_binding(v1rbac, ns, role_binding_tpl)
         logger.info(f"Created rolebinding")
 
     cm_tpl = await create_experiment_env_config_map(
@@ -66,12 +70,14 @@ async def create_chaos_experiment(
     if cm_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(cm_tpl, owner=body)
+            await update_config_map(v1, ns, cm_tpl)
         logger.info(f"Created experiment's env vars configmap")
 
     pod_tpl = await create_pod(v1, cm, spec, ns, name_suffix)
     if pod_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(pod_tpl, owner=body)
+            await update_pod(v1, ns, pod_tpl)
         logger.info("Chaos Toolkit started")
 
 
@@ -475,3 +481,58 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
     logger.info(f"Pod {pod.metadata.self_link} created in ns '{ns}'")
 
     return tpl
+
+
+@run_async
+def update_namespace(api: client.CoreV1Api, name: str, body: str):
+    return api.patch_namespace(name, body)
+
+
+def _update_namespaced_resource(
+        api: Union[client.CoreV1Api, client.RbacAuthorizationV1Api],
+        ns: str,
+        resource: str,
+        body: str):
+    name = body.get("metadata", {}).get("name")
+    if not name:
+        return
+
+    api_func_name = f"patch_namespaced_{resource}"
+    api_func = getattr(api, api_func_name)
+    return api_func(name, ns, body)
+
+
+@run_async
+def update_sa(api: client.CoreV1Api, ns: str, body: str):
+    return _update_namespaced_resource(
+        api, ns, "service_account", body
+    )
+
+
+@run_async
+def update_role(api: client.RbacAuthorizationV1Api, ns: str, body: str):
+    return _update_namespaced_resource(
+        api, ns, "role", body
+    )
+
+
+@run_async
+def update_role_binding(api: client.RbacAuthorizationV1Api,
+                        ns: str, body: str):
+    return _update_namespaced_resource(
+        api, ns, "role_binding", body
+    )
+
+
+@run_async
+def update_config_map(api: client.CoreV1Api, ns: str, body: str):
+    return _update_namespaced_resource(
+        api, ns, "config_map", body
+    )
+
+
+@run_async
+def update_pod(api: client.CoreV1Api, ns: str, body: str):
+    return _update_namespaced_resource(
+        api, ns, "pod", body
+    )
