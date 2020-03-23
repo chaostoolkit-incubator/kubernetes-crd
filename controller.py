@@ -425,7 +425,7 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
             "configMapName", "chaostoolkit-env")
         env_cm_enabled = pod_spec.get("env", {}).get("enabled", True)
         settings_secret_enabled = pod_spec.get("settings", {}).get(
-            "enabled", True)
+            "enabled", False)
         settings_secret_name = pod_spec.get("settings", {}).get(
             "secretName", "chaostoolkit-settings")
         experiment_as_file = pod_spec.get(
