@@ -63,8 +63,10 @@ async def create_chaos_experiment(
     cm_tpl = await create_experiment_env_config_map(
         v1, ns, spec.get("pod", {}).get("env", {}).get(
             "configMapName", "chaostoolkit-env"))
-    if cm_tpl and not keep_resources_on_delete:
-        kopf.adopt(cm_tpl, owner=body)
+    if cm_tpl:
+        if not keep_resources_on_delete:
+            kopf.adopt(cm_tpl, owner=body)
+        logger.info(f"Created experiment's env vars configmap")
 
     pod_tpl = await create_pod(v1, cm, spec, ns, name_suffix)
     if pod_tpl:
