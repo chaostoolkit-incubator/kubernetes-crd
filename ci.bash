@@ -17,17 +17,21 @@ function run-test () {
 
 function build-docker () {
     echo "Building the Docker image"
-    docker login -u ${DOCKER_USER_NAME} -p ${DOCKER_PWD}
     docker build -t chaostoolkit/k8scrd .
 
-    echo "Publishing to the Docker repository"
-    docker push chaostoolkit/k8scrd:latest
+    if [[ $TRAVIS_BRANCH == "master" ]]; then
+      echo "Publishing to the Docker repository"
+      docker login -u ${DOCKER_USER_NAME} -p ${DOCKER_PWD}
+      docker push chaostoolkit/k8scrd:latest
+    fi
 }
 
 function release () {
-    docker tag chaostoolkit/k8scrd:latest chaostoolkit/k8scrd:$TRAVIS_TAG
-    echo "Publishing to the Docker repository"
-    docker push chaostoolkit/k8scrd:$TRAVIS_TAG
+    if [[ $TRAVIS_BRANCH == "master" ]]; then
+      docker tag chaostoolkit/k8scrd:latest chaostoolkit/k8scrd:$TRAVIS_TAG
+      echo "Publishing to the Docker repository"
+      docker push chaostoolkit/k8scrd:$TRAVIS_TAG
+    fi
 }
 
 function main () {
