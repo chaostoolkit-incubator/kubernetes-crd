@@ -3,8 +3,8 @@ language: python
 python:
 - 3.7
 before_install:
-#- curl "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-- curl  https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v3.5.4/kustomize_v3.5.4_linux_amd64.tar.gz -o kustomize_v3.5.4_linux_amd64.tar.gz -s -O -L
+- curl  https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v3.5.4/kustomize_v3.5.4_linux_amd64.tar.gz
+  -o kustomize_v3.5.4_linux_amd64.tar.gz -s -O -L
 - tar xzf kustomize_v3.5.4_linux_amd64.tar.gz
 - export PATH=.:$PATH
 - kustomize version
@@ -12,15 +12,13 @@ install:
 - pip install -r requirements.txt -r requirements-dev.txt
 services:
 - docker
-
 env:
   global:
   - DOCKER_USER_NAME: chaostoolkit
-  - secure: YXJix2bpKt6dJJs086MOokRUSsDd7RvShOrDO/yfFSDnS+iQA2IuRoxWQG2C9UYCdd7qWis/CsuLIv8wnOE9F4K+h5IUvmxJJCRN+jCDJv+LMPnn3i3SHW3CacKhAN9mXkUrw8DE4D/GwhaItPkH3G+BJ/YlVKpJov8C6LoGAEg/qClVmgB6tKMxCtN/I6fN0d/obbY/Ujq9BM4xARn4QPjl+5hKFTin5W607GpFCQY3hJALM7PIt/NYBJfCUFUA164/9S2J2t4V8G4L/gXgI/V5ml88M9aZna3uX1qZpvzAlPoTJGS3y56lbSo9PvAbF8/DJL4IrGq+2IWHXMFYg+bQiY4Iv539UX/KZq5JAPafDLv7vTclSJeEBjLZBqFLQSGG6OQR7gIjEStTucMlFA9XbEotOC5ts27ZDQPw8pCS/G30cVRQHHQH2AgeGPiYtF7hOZy8zCH41E7RWmSZ9gK5GKCMhjcnyLR/a/ANeQEr4kEdu3Wr7BbzLOoUHzPPIZl4kdDd9n8HAk1G3/Kqpcv+x/tTWPeoFaJE9NWc3MuOW9U7vx7N2XKZ1JZKoihauBL24zHKpHSffvuiK/yDQYTVaDXsn3AP+lZKNOMDam0p+uA2BV9nrf82sJvB5ffop/2JylrRb/U7OS5mzCH0prULV4dcAh69JiGLUZspQuw=
+  - secure: JpVlzIgw0LWWkKEmExcOxjI9wEAJ2wOVMDNizbtkpaMMT6nPppxKKa+mp0HZNXItCfwNPlhY2iyjxzi1yB0xKi87FTfmDz4qjCTz6mAU6Q2tWc31HMrs2YeXGmDjXMFc17dQvM3y1XKxkjUGr5kIYTn3T3dO4ZmdVQ8Mqt/O2vdI8QoQfK8N25vJ5NhpTLgCQepv3pfD1xgV5zOU3If8sHisgR1JtqCznI9uTB6gfPaiLA7qIh4ToUEU8Uuvzn8VLRQ5SucaldmPtyJoymthzTT1dpT/e5y2CnSPtZ4SnssNFZsEzzMcxYl7SBvOiwlhaELu4IPVGViXbvXK6I/S1g1reC3GYdZ708jCS7z0cjmT8lnQQ/s8y4X6ulQn55ENWSHR2dFibcoAnbVmBVpgy8T7d6G4WBxo+k5v4wmwTYiMZREf2Gh7oxG40cXivNE02mPExc4HfEUiiB2joqhE0tjJHKqPy6kz/vC7qn4f89x22hspKG0qQveG0EV2S2pK1WMqjj/M2vD3nS/5nt0EpbYdKgEJw9ki8+jmytCDpe1oiwNEbY3JdW2pA5M+Y20QSByJ26X4R2FHSj9ZJFo+viaHU9UiFnRBArcTWuE01fX+MYp+sOIhC53X0he5HuXnXT6/qSYN8mJGVT/Cx8kcn4OwZo6TVi7exSMMLjGI7uI=
 
 script:
 - bash ci.bash
-
 notifications:
   webhooks:
     urls:
