@@ -402,6 +402,21 @@ To get details about the experiment, you can describe it:
 $ kubectl -n chaostoolkit-crd describe chaosexperiment my-chaos-exp
 ```
 
+### Delete a Chaos Toolkit experiment
+
+Finished Chaos Toolkit experiments are not deleted automatically, regardless
+their final status. To do so, delete the `ChaosToolkitExperiment`
+resource from its name, using the following command:
+
+```
+$ kubectl -n chaostoolkit-crd delete chaosexperiment my-chaos-exp
+```
+
+
+
+As a reminder, all resources created to run this experiment will also be
+deleted by default, unless the `keep_resources_on_delete` flag was set.
+
 ## Contribute
 
 If you wish to contribute more functions to this package, you are more than
