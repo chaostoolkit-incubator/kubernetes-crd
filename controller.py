@@ -6,6 +6,7 @@ import string
 from typing import Any, Dict, List, NoReturn, Union
 
 import kopf
+from kopf.toolkits.hierarchies import label
 from kubernetes import client, config  # noqa: W0611
 from kubernetes.client.rest import ApiException
 import yaml
@@ -73,7 +74,7 @@ async def create_chaos_experiment(
             await update_config_map(v1, ns, cm_tpl)
         logger.info(f"Created experiment's env vars configmap")
 
-    pod_tpl = await create_pod(v1, cm, spec, ns, name_suffix)
+    pod_tpl = await create_pod(v1, cm, spec, ns, name_suffix, meta)
     if pod_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(pod_tpl, owner=body)
@@ -415,7 +416,8 @@ def create_role_binding(api: client.RbacAuthorizationV1Api,
 
 @run_async
 def create_pod(api: client.CoreV1Api, configmap: Resource,
-               cro_spec: ResourceChunk, ns: str, name_suffix: str):
+               cro_spec: ResourceChunk, ns: str, name_suffix: str,
+               cro_meta: ResourceChunk):
     logger = logging.getLogger('kopf.objects')
 
     pod_spec = cro_spec.get("pod", {})
@@ -475,6 +477,7 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
     set_ns(tpl, ns)
     set_pod_name(tpl, name_suffix=name_suffix)
     set_sa_name(tpl, name_suffix=name_suffix)
+    label(tpl, labels=cro_meta.get('labels', {}))
 
     logger.debug(f"Creating pod with template:\n{tpl}")
     pod = api.create_namespaced_pod(body=tpl, namespace=ns)
