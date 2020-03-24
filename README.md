@@ -367,6 +367,25 @@ spec:
     - ${EXPERIMENT_PATH-$EXPERIMENT_URL}
 ```
 
+### Label your experiment
+
+Experiment labels can be defined in the `ChaosToolkitExperiment`'s metadata.
+All labels will be forwarded, if not already defined, in the pod running the
+experiment.
+
+You can define labels as follow:
+
+```yaml
+---
+apiVersion: chaostoolkit.org/v1
+kind: ChaosToolkitExperiment
+metadata:
+  name: my-chaos-exp
+  namespace: chaostoolkit-crd
+  labels:
+    experiment-url: https://example.com/experiment.json
+    environment: staging
+```
 
 ### List running Chaos Toolkit experiments
 
