@@ -3,7 +3,9 @@ language: python
 python:
 - 3.7
 before_install:
-- curl "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+#- curl "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+- curl  https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v3.5.4/kustomize_v3.5.4_linux_amd64.tar.gz -o kustomize_v3.5.4_linux_amd64.tar.gz -s -O -L
+- tar xzf kustomize_v3.5.4_linux_amd64.tar.gz
 - export PATH=.:$PATH
 - kustomize version
 install:
@@ -18,10 +20,6 @@ env:
 
 script:
 - bash ci.bash
-
-branches:
-  only:
-  - master
 
 notifications:
   webhooks:
