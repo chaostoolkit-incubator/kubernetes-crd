@@ -367,7 +367,7 @@ spec:
     - ${EXPERIMENT_PATH-$EXPERIMENT_URL}
 ```
 
-### Label your experiment
+### Label your Chaos Toolkit experiment
 
 Experiment labels can be defined in the `ChaosToolkitExperiment`'s metadata.
 All labels will be forwarded, if not already defined, in the pod running the
@@ -385,6 +385,55 @@ metadata:
   labels:
     experiment-url: https://example.com/experiment.json
     environment: staging
+```
+
+
+### Allow network traffic for Chaos Toolkit experiments
+
+When the operator is installed with the net-security variant, the
+`chaostoolkit` pod has limited network access. The pod is, by default,
+isolated for ingress connectivity and is limited to only DNS lookup &
+HTTPS for external traffic.
+
+To allow the pod for other access, you may create another network policy
+within the `chaostoolkit-run` namespace for pods matching the 
+`app: chaostoolkit` label:
+
+```yaml
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: my-custom-network-policy
+  namespace: chaostoolkit-run
+spec:
+  podSelector:
+    matchLabels:
+      app: chaostoolkit
+```
+
+Below is an example to allow the pod accessing any URL via HTTP to external:
+ 
+```yaml
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-chaostoolkit-to-unsecure-external
+  namespace: chaostoolkit-run
+spec:
+  podSelector:
+    matchLabels:
+      app: chaostoolkit
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
+      - port: 80
+        protocol: TCP
 ```
 
 ### List running Chaos Toolkit experiments
