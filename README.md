@@ -13,7 +13,7 @@ your Kubernetes cluster.
 
 We suggest you use [Kustomize][kustomize] to generate the manifest to apply.
 Ensure to download the latest release and drop into your PATH. Recent versions
-pf kubectl also ships it with the `kubectl apply -k ...` command but this
+of kubectl also ships it with the `kubectl apply -k ...` command but this
 always seems to lag, so better download the latest release of Kustomize
 directly.
 
@@ -412,10 +412,18 @@ resource from its name, using the following command:
 $ kubectl -n chaostoolkit-crd delete chaosexperiment my-chaos-exp
 ```
 
-
-
 As a reminder, all resources created to run this experiment will also be
 deleted by default, unless the `keep_resources_on_delete` flag was set.
+
+
+## Uninstall the operator
+
+To uninstall the operator and all related resources, simple run the following
+command for the overlay that is deployed.
+
+```
+$ kustomize build manifests/overlays/generic[-rbac[-podsec[-netsec]]] | kubectl delete -f -
+```
 
 ## Contribute
 
