@@ -5,9 +5,7 @@ metadata:
   name: deny-all
   namespace: chaostoolkit-run
 spec:
-  podSelector:
-    matchLabels:
-      app: chaostoolkit
+  podSelector: {}
   policyTypes:
   - Ingress
   - Egress
