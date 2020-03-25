@@ -35,6 +35,7 @@ rules:
   - create
   - delete
   - list
+  - patch
 - apiGroups:
   - ""
   resources:
@@ -46,6 +47,7 @@ rules:
   - get
   - delete
   - list
+  - patch
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:
