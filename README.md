@@ -451,6 +451,8 @@ To get details about the experiment, you can describe it:
 $ kubectl -n chaostoolkit-crd describe chaosexperiment my-chaos-exp
 ```
 
+You can also use the shorter versions of resource name: `ctks` and `ctk`.
+
 ### Delete a Chaos Toolkit experiment
 
 Finished Chaos Toolkit experiments are not deleted automatically, regardless
