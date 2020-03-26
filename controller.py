@@ -433,6 +433,9 @@ def create_role_binding(api: client.RbacAuthorizationV1Api,
         sa_name = f"{sa_name}-{name_suffix}"
         tpl["subjects"][0]["name"] = sa_name
 
+        # change sa subject namespace
+        tpl["subjects"][0]["namespace"] = ns
+
         # change role name
         role_name = tpl["roleRef"]["name"]
         role_name = f"{role_name}-{name_suffix}"

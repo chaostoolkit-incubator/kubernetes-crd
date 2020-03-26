@@ -102,7 +102,8 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
     }
     assert ctk_rolebinding["subjects"] == [{
         "kind": "ServiceAccount",
-        "name": "chaostoolkit"
+        "name": "chaostoolkit",
+        "namespace": "chaostoolkit-run"
     }]
 
     ctk_pod = yaml.safe_load(resource["data"]["chaostoolkit-pod.yaml"])

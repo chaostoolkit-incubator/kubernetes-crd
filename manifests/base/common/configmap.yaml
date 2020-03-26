@@ -54,6 +54,7 @@ data:
     subjects:
     - kind: ServiceAccount
       name: chaostoolkit
+      namespace: chaostoolkit-run
 
   chaostoolkit-pod.yaml: |-
     apiVersion: v1
