@@ -32,6 +32,16 @@ data:
       - "delete"
       - "list"
 
+  chaostoolkit-role-psp-rule.yaml: |-
+    apiGroups:
+    - policy
+    resources:
+    - podsecuritypolicies
+    resourceNames:
+    - chaostoolkit-run
+    verbs:
+    - use
+
   chaostoolkit-role-binding.yaml: |-
     apiVersion: rbac.authorization.k8s.io/v1
     kind: RoleBinding

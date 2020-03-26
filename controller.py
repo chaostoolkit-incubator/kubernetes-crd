@@ -3,7 +3,7 @@ from functools import wraps, partial
 import logging
 import random
 import string
-from typing import Any, Dict, List, NoReturn, Union
+from typing import Any, Dict, List, NoReturn, Union, Optional
 
 import kopf
 from kopf.toolkits.hierarchies import label
@@ -25,8 +25,10 @@ async def create_chaos_experiment(
     """
     v1 = client.CoreV1Api()
     v1rbac = client.RbacAuthorizationV1Api()
+    v1policy = client.PolicyV1beta1Api()
 
     cm = await get_config_map(v1, spec, namespace)
+    psp = await get_default_psp(v1policy)
 
     keep_resources_on_delete = spec.get("keep_resources_on_delete", False)
     if keep_resources_on_delete:
@@ -50,7 +52,7 @@ async def create_chaos_experiment(
         logger.info(f"Created service account")
 
     role_tpl = await create_role(
-        v1rbac, cm, spec, ns, name_suffix)
+        v1rbac, cm, spec, ns, name_suffix, psp=psp)
     if role_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(role_tpl, owner=body)
@@ -266,6 +268,15 @@ def set_chaos_cmd_args(pod_tpl: Dict[str, Any], cmd_args: List[str]):
             container["args"][-1] = new_cmd
 
 
+def set_rule_psp_name(rule_tpl: Dict[str, Any], name: str) -> NoReturn:
+    """
+    Set the name of the PSP to be used on a role rule
+    """
+    if name:
+        if rule_tpl["resources"] == ["podsecuritypolicies"]:
+            rule_tpl["resourceNames"] = [name]
+
+
 def run_async(func):
     @wraps(func)
     async def run(*args, loop=None, executor=None, **kwargs):
@@ -304,6 +315,21 @@ def get_config_map(v1: client.CoreV1Api(), spec: Dict[str, Any],
     cm = v1.read_namespaced_config_map(
         namespace=namespace, name=cm_pod_spec_name)
     return cm
+
+
+@run_async
+def get_default_psp(v1: client.PolicyV1beta1Api,
+                    name: str = 'chaostoolkit-run'
+                    ) -> Optional[client.PolicyV1beta1PodSecurityPolicy]:
+    """
+    Get the default PodSecurityPolicy for the CTK pod,
+    if the CRD is installed with podsec variant.
+    """
+    logger = logging.getLogger('kopf.objects')
+    try:
+        return v1.read_pod_security_policy(name=name)
+    except ApiException:
+        logger.info("Default PSP for chaostoolkit not found.")
 
 
 @run_async
@@ -357,7 +383,8 @@ def create_sa(api: client.CoreV1Api, configmap: Resource,
 
 @run_async
 def create_role(api: client.RbacAuthorizationV1Api, configmap: Resource,
-                cro_spec: ResourceChunk, ns: str, name_suffix: str):
+                cro_spec: ResourceChunk, ns: str, name_suffix: str,
+                psp: client.PolicyV1beta1PodSecurityPolicy = None):
     logger = logging.getLogger('kopf.objects')
     role_name = cro_spec.get("role", {}).get("name")
     if not role_name:
@@ -366,6 +393,17 @@ def create_role(api: client.RbacAuthorizationV1Api, configmap: Resource,
         role_name = f"{role_name}-{name_suffix}"
         tpl["metadata"]["name"] = role_name
         set_ns(tpl, ns)
+
+        # when a PSP is defined, we add a rule to use that PSP
+        if psp:
+            logger.info(
+                f"Adding pod security policy {psp.metadata.name} use to role")
+            psp_rule = yaml.safe_load(
+                configmap.data['chaostoolkit-role-psp-rule.yaml'])
+
+            set_rule_psp_name(psp_rule, psp.metadata.name)
+            tpl["rules"].append(psp_rule)
+
         logger.debug(f"Creating role with template:\n{tpl}")
         try:
             api.create_namespaced_role(body=tpl, namespace=ns)
