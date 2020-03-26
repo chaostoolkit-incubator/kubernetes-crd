@@ -39,7 +39,7 @@ This would use the RBAC variant.
 
 The following will happen:
 
-* the `chaostoolkit-crd` namespace will be created
+* the `chaostoolkit-crd` and `chaostoolkit-run` namespaces will be created
 * a service account will be created
 * a CRD definition will be declared
 * a config map, with a Chaos Toolkit pod template (and other resources) will be
@@ -91,8 +91,8 @@ metadata:
   namespace: chaostoolkit-crd
 ```
 
-We decide to execute those chaostoolkit in a namespace called
-`chaostoolkit-run`. It will be created on the fly.
+We decide to execute those chaostoolkit in the default `chaostoolkit-run` 
+namespace. 
 We create a configmap that contains the experiment as a file entry.
 Finally, we declare our experiment resource that the operator listens for.
 
