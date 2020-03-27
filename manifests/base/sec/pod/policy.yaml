@@ -5,6 +5,8 @@ metadata:
   name: chaostoolkit-crd
 spec:
   privileged: false
+  allowPrivilegeEscalation: false
+  defaultAllowPrivilegeEscalation: false
   hostNetwork: false
   hostIPC: false
   hostPID: false
@@ -62,6 +64,8 @@ metadata:
   name: chaostoolkit-run
 spec:
   privileged: false
+  allowPrivilegeEscalation: false
+  defaultAllowPrivilegeEscalation: false
   hostNetwork: false
   hostIPC: false
   hostPID: false
