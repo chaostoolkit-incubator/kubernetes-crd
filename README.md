@@ -140,7 +140,7 @@ spec:
 ## Various configurations
 
 You may decide to change various aspects of the final pod (such as passing
-settings as secrets, changing the roles allowed to the pod, even overide
+settings as secrets, changing the roles allowed to the pod, even override
 the entire pod template).
 
 ### Run the experiment from a URL
