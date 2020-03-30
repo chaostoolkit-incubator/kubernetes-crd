@@ -70,6 +70,7 @@ rules:
   - patch
 - apiGroups:
   - policy
+  - extensions
   resources:
   - podsecuritypolicies
   verbs:

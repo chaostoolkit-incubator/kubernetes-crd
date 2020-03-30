@@ -35,6 +35,7 @@ data:
   chaostoolkit-role-psp-rule.yaml: |-
     apiGroups:
     - policy
+    - extensions
     resources:
     - podsecuritypolicies
     resourceNames:

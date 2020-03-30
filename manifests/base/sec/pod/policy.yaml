@@ -28,6 +28,7 @@ metadata:
   name: chaostoolkit-psp
 rules:
 - apiGroups:
+  - policy
   - extensions
   resources:
   - podsecuritypolicies
