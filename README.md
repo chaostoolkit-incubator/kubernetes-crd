@@ -237,8 +237,10 @@ For instance, assuming a settings file, named `settings.yaml`:
 ```
 $ kubectl -n chaostoolkit-run \
     create secret generic chaostoolkit-settings \
-    --from-file=settings.yaml
+    --from-file=settings.yaml=./settings.yaml
 ```
+
+The settings file must be named as `settings.yaml` within the secret.
 
 Note, if you haven't ever created an execution via this CRD, you may need to
 create the `chaostoolkit-run` namespace in which the chaostoolkit pods will
