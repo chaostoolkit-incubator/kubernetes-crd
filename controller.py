@@ -219,6 +219,25 @@ def remove_env_config_map(pod_tpl: Dict[str, Any]):
                     break
 
 
+def add_env_secret(pod_tpl: Dict[str, Any], secret_name: str):
+    """
+    Add the secret name to be used as envFrom entry in the pod spec.
+
+    See: https://kubernetes.io/docs/tasks/inject-data-application/distribute-credentials-secure/#configure-all-key-value-pairs-in-a-secret-as-container-environment-variables
+    """  # noqa: E501
+    spec = pod_tpl["spec"]
+    for container in spec["containers"]:
+        if container["name"] == "chaostoolkit":
+            container.setdefault("envFrom", []).append(
+                {
+                    "secretRef": {
+                        "name": secret_name
+                    }
+                }
+            )
+            break
+
+
 def remove_env_path_config_map(pod_tpl: Dict[str, Any]):
     """
     Remove the `EXPERIMENT_PATH` environment path because the experiment
@@ -473,6 +492,8 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
         env_cm_name = pod_spec.get("env", {}).get(
             "configMapName", "chaostoolkit-env")
         env_cm_enabled = pod_spec.get("env", {}).get("enabled", True)
+        # optional support for loading secret keys as env. variables
+        env_secret_name = pod_spec.get("env", {}).get("secretName")
         settings_secret_enabled = pod_spec.get("settings", {}).get(
             "enabled", False)
         settings_secret_name = pod_spec.get("settings", {}).get(
@@ -491,6 +512,11 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
         elif env_cm_name:
             logger.info(f"Env config map named '{env_cm_name}'")
             set_env_config_map_name(tpl, env_cm_name)
+
+        if env_secret_name and env_cm_enabled:
+            logger.info(f"Adding secret '{env_secret_name}' "
+                        f"as environment variables")
+            add_env_secret(tpl, env_secret_name)
 
         if not settings_secret_enabled:
             logger.info("Removing default settings secret volume")
