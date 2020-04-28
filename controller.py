@@ -22,10 +22,14 @@ async def create_chaos_experiment(
         namespace: str, logger: logging.Logger, **kwargs) -> NoReturn:
     """
     Create a new pod running a Chaos Toolkit instance until it terminates.
+
+    If experiment is scheduled, create a new cronJob that will periodically
+    create a Chaos Toolkit instance.
     """
     v1 = client.CoreV1Api()
     v1rbac = client.RbacAuthorizationV1Api()
     v1policy = client.PolicyV1beta1Api()
+    v1cron = client.BatchV1beta1Api()
 
     cm = await get_config_map(v1, spec, namespace)
     psp = await get_default_psp(v1policy)
@@ -76,12 +80,30 @@ async def create_chaos_experiment(
             await update_config_map(v1, ns, cm_tpl)
         logger.info(f"Created experiment's env vars configmap")
 
-    pod_tpl = await create_pod(v1, cm, spec, ns, name_suffix, meta)
-    if pod_tpl:
-        if not keep_resources_on_delete:
-            kopf.adopt(pod_tpl, owner=body)
-            await update_pod(v1, ns, pod_tpl)
-        logger.info("Chaos Toolkit started")
+    schedule = spec.get("schedule", {})
+    if schedule:
+        if schedule.get('kind').lower() == 'cronjob':
+            # when schedule defined, we cannot create the pod directly,
+            # we must create a cronJob with the pod definition
+            pod_tpl = await create_pod(
+                v1, cm, spec, ns, name_suffix, meta, apply=False)
+            if pod_tpl:
+                cron_tpl = await create_cron_job(
+                    v1cron, cm, spec, ns, name_suffix, meta, pod_tpl=pod_tpl)
+                if cron_tpl:
+                    if not keep_resources_on_delete:
+                        kopf.adopt(cron_tpl, owner=body)
+                        await update_cron_job(v1cron, ns, cron_tpl)
+                    logger.info("Chaos Toolkit scheduled")
+
+    else:
+        # create pod for running experiment right away
+        pod_tpl = await create_pod(v1, cm, spec, ns, name_suffix, meta)
+        if pod_tpl:
+            if not keep_resources_on_delete:
+                kopf.adopt(pod_tpl, owner=body)
+                await update_pod(v1, ns, pod_tpl)
+            logger.info("Chaos Toolkit started")
 
 
 ###############################################################################
@@ -296,6 +318,42 @@ def set_rule_psp_name(rule_tpl: Dict[str, Any], name: str) -> NoReturn:
             rule_tpl["resourceNames"] = [name]
 
 
+def set_cron_job_name(cron_tpl: Dict[str, Any], name_suffix: str) -> str:
+    """
+    Set the name of the cron job
+
+    Suffix with a random string so that we don't get conflicts.
+    """
+    cron_name = cron_tpl["metadata"]["name"]
+    cron_name = f"{cron_name}-{name_suffix}"
+    cron_tpl["metadata"]["name"] = cron_name
+    return cron_name
+
+
+def set_cron_job_schedule(cron_tpl: Dict[str, Any], schedule: str) -> NoReturn:
+    """
+    Set the cron job schedule, if specifed, otherwise leaves default schedule
+    """
+    if not schedule:
+        return
+
+    cron_spec = cron_tpl.setdefault("spec", {})
+    cron_spec["schedule"] = schedule
+
+
+def set_cron_job_template_spec(
+        cron_tpl: Dict[str, Any], tpl_spec: Dict[str, Any]) -> NoReturn:
+    """
+    Set the spec for the cron job template
+    """
+    cron_spec = cron_tpl.setdefault("spec", {})
+    _tpl = cron_spec.setdefault(
+        "jobTemplate", {}).setdefault(
+        "spec", {}).setdefault(
+        "template", {})
+    _tpl["spec"] = tpl_spec
+
+
 def run_async(func):
     @wraps(func)
     async def run(*args, loop=None, executor=None, **kwargs):
@@ -477,7 +535,7 @@ def create_role_binding(api: client.RbacAuthorizationV1Api,
 @run_async
 def create_pod(api: client.CoreV1Api, configmap: Resource,
                cro_spec: ResourceChunk, ns: str, name_suffix: str,
-               cro_meta: ResourceChunk):
+               cro_meta: ResourceChunk, *, apply: bool = True):
     logger = logging.getLogger('kopf.objects')
 
     pod_spec = cro_spec.get("pod", {})
@@ -546,9 +604,39 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
     set_sa_name(tpl, name_suffix=name_suffix)
     label(tpl, labels=cro_meta.get('labels', {}))
 
-    logger.debug(f"Creating pod with template:\n{tpl}")
-    pod = api.create_namespaced_pod(body=tpl, namespace=ns)
-    logger.info(f"Pod {pod.metadata.self_link} created in ns '{ns}'")
+    if apply:
+        logger.debug(f"Creating pod with template:\n{tpl}")
+        pod = api.create_namespaced_pod(body=tpl, namespace=ns)
+        logger.info(f"Pod {pod.metadata.self_link} created in ns '{ns}'")
+
+    return tpl
+
+
+@run_async
+def create_cron_job(api: client.BatchV1beta1Api, configmap: Resource,
+                    cro_spec: ResourceChunk, ns: str, name_suffix: str,
+                    cro_meta: ResourceChunk, pod_tpl: str):
+    logger = logging.getLogger('kopf.objects')
+
+    schedule_spec = cro_spec.get("schedule", {})
+    schedule = schedule_spec.get("value")
+
+    tpl = yaml.safe_load(configmap.data['chaostoolkit-cronjob.yaml'])
+    set_ns(tpl, ns)
+    set_cron_job_name(tpl, name_suffix=name_suffix)
+    set_cron_job_schedule(tpl, schedule)
+    set_cron_job_template_spec(tpl, pod_tpl.get("spec", {}))
+
+    experiment_labels = cro_meta.get('labels', {})
+    label(tpl, labels=experiment_labels)
+    label(tpl["spec"]["jobTemplate"], labels=experiment_labels)
+    label(tpl["spec"]["jobTemplate"]["spec"]["template"],
+          labels=experiment_labels)
+
+    logger.debug(f"Creating cron job with template:\n{tpl}")
+    cron = api.create_namespaced_cron_job(body=tpl, namespace=ns)
+    logger.info(f"Cron Job '{cron.metadata.self_link}' scheduled with "
+                f"pattern '{schedule}' in ns '{ns}'")
 
     return tpl
 
@@ -605,4 +693,11 @@ def update_config_map(api: client.CoreV1Api, ns: str, body: str):
 def update_pod(api: client.CoreV1Api, ns: str, body: str):
     return _update_namespaced_resource(
         api, ns, "pod", body
+    )
+
+
+@run_async
+def update_cron_job(api: client.BatchV1beta1Api, ns: str, body: str):
+    return _update_namespaced_resource(
+        api, ns, "cron_job", body
     )
