@@ -72,10 +72,10 @@ data:
         image: chaostoolkit/chaostoolkit
         imagePullPolicy: Always
         command:
-        - "/bin/sh" 
+        - /usr/local/bin/chaos
         args:
-        - "-c"
-        - "/usr/local/bin/chaos run ${EXPERIMENT_PATH-$EXPERIMENT_URL} && exit $?"
+        - run
+        - ${EXPERIMENT_PATH-$EXPERIMENT_URL}
         env:
         - name: CHAOSTOOLKIT_IN_POD
           value: "true"

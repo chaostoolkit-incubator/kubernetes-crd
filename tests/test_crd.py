@@ -121,6 +121,30 @@ def test_set_chaos_cmd_args(generic: List['Resource']):
     resource = generic[4]
     ctk_pod = yaml.safe_load(resource["data"]["chaostoolkit-pod.yaml"])
 
+    overridden_args = [
+        "--verbose", "run", "/home/svc/experiment.json"]
+
+    set_chaos_cmd_args(ctk_pod, cmd_args=overridden_args)
+    assert "chaos" in ctk_pod["spec"]["containers"][0]["command"][0]
+    assert ctk_pod["spec"]["containers"][0]["args"] == overridden_args
+
+
+def test_set_chaos_cmd_args_legacy(generic: List['Resource']):
+    resource = generic[4]
+    legacy_pod = """
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+          - name: chaostoolkit
+            command:
+            - "/bin/sh"
+            args:
+            - "-c"
+            - "/usr/local/bin/chaos run ${EXPERIMENT_PATH-$EXPERIMENT_URL} && exit $?"
+    """
+    ctk_pod = yaml.safe_load(legacy_pod)
+
     set_chaos_cmd_args(ctk_pod, cmd_args=[
         "--verbose", "run", "/home/svc/experiment.json"])
     assert "chaos --verbose run /home/svc/experiment.json" in \
