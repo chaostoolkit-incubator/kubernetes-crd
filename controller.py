@@ -299,14 +299,35 @@ def set_experiment_config_map_name(pod_tpl: Dict[str, Any], cm_name: str):
 def set_chaos_cmd_args(pod_tpl: Dict[str, Any], cmd_args: List[str]):
     """
     Set the command line arguments for the chaos command
-    """
+
+    Handle two syntax of the POD template command:
+    * Legacy:
+        command:
+        - "/bin/sh"
+        args:
+        - "-c"
+        - "/usr/local/bin/chaos run ${EXPERIMENT_PATH-$EXPERIMENT_URL} && exit $?"
+    -> we need to inject the arguments into the last args command line string
+    * New style:
+        command:
+        - "/usr/local/bin/chaos"
+        args:
+        - run
+        - ${EXPERIMENT_PATH-$EXPERIMENT_URL}
+    -> we can directly replace the list of args by user's list
+    """  # noqa: E501
     spec = pod_tpl["spec"]
     for container in spec["containers"]:
         if container["name"] == "chaostoolkit":
-            args_as_str = ' '.join(cmd_args)
-            new_cmd = "/usr/local/bin/chaos {args} && exit $?".format(
-                args=args_as_str)
-            container["args"][-1] = new_cmd
+            if "chaos" in container["command"][0]:
+                # new style syntax: pod command is chaos command
+                container["args"] = cmd_args
+            else:
+                # legacy syntax: pod command is a new shell
+                args_as_str = ' '.join(cmd_args)
+                new_cmd = "/usr/local/bin/chaos {args} && exit $?".format(
+                    args=args_as_str)
+                container["args"][-1] = new_cmd
 
 
 def set_rule_psp_name(rule_tpl: Dict[str, Any], name: str) -> NoReturn:
