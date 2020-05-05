@@ -24,14 +24,15 @@ function build-docker () {
       docker login -u ${DOCKER_USER_NAME} -p ${DOCKER_PWD}
       docker push chaostoolkit/k8scrd:latest
     fi
+
 }
 
 function release () {
-    if [[ $TRAVIS_BRANCH == "master" ]]; then
-      docker tag chaostoolkit/k8scrd:latest chaostoolkit/k8scrd:$TRAVIS_TAG
-      echo "Publishing to the Docker repository"
-      docker push chaostoolkit/k8scrd:$TRAVIS_TAG
-    fi
+    docker tag chaostoolkit/k8scrd:latest chaostoolkit/k8scrd:$TRAVIS_TAG
+    echo "Publishing to the Docker repository"
+    docker login -u ${DOCKER_USER_NAME} -p ${DOCKER_PWD}
+    docker push chaostoolkit/k8scrd:latest
+    docker push chaostoolkit/k8scrd:$TRAVIS_TAG
 }
 
 function main () {
