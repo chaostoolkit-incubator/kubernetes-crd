@@ -366,7 +366,7 @@ spec:
     - --verbose
     - run
     - --dry
-    - ${EXPERIMENT_PATH-$EXPERIMENT_URL}
+    - $(EXPERIMENT_PATH)
 ```
 
 ### Label your Chaos Toolkit experiment
