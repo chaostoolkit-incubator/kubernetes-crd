@@ -4,6 +4,12 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.3.0...HEAD
 
+### Changed
+
+-   Fixes error when creating experiment default config map [#48][48]
+
+[48]: https://github.com/chaostoolkit-incubator/kubernetes-crd/issues/48
+
 ## [0.3.0][] - 2020-05-05
 
 [0.3.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/tree/0.3.0

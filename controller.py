@@ -402,7 +402,8 @@ def create_experiment_env_config_map(v1: client.CoreV1Api(), namespace: str,
     except ApiException:
         logger.info("Creating default `chaostoolkit-env` configmap")
         body = client.V1ConfigMap(metadata=client.V1ObjectMeta(name=name))
-        return v1.create_namespaced_config_map(namespace, body)
+        cm = v1.create_namespaced_config_map(namespace, body)
+        return cm.to_dict()
 
 
 @run_async
