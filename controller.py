@@ -313,8 +313,10 @@ def set_chaos_cmd_args(pod_tpl: Dict[str, Any], cmd_args: List[str]):
         - "/usr/local/bin/chaos"
         args:
         - run
-        - ${EXPERIMENT_PATH-$EXPERIMENT_URL}
+        - $(EXPERIMENT_PATH)
     -> we can directly replace the list of args by user's list
+    Beware the new style args must use the K8s env vars syntax: $()
+    See: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#use-environment-variables-to-define-arguments
     """  # noqa: E501
     spec = pod_tpl["spec"]
     for container in spec["containers"]:
