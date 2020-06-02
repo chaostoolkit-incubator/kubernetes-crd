@@ -75,7 +75,7 @@ data:
         - /usr/local/bin/chaos
         args:
         - run
-        - ${EXPERIMENT_PATH-$EXPERIMENT_URL}
+        - $(EXPERIMENT_PATH)
         env:
         - name: CHAOSTOOLKIT_IN_POD
           value: "true"

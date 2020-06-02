@@ -614,6 +614,7 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
             logger.info("Removing default experiment config map volume")
             remove_experiment_volume(tpl)
             remove_env_path_config_map(tpl)
+            set_chaos_cmd_args(tpl, ["run", "$(EXPERIMENT_URL)"])
 
         if cmd_args:
             logger.info(
