@@ -18,6 +18,13 @@ spec:
       - name: crd
         image: chaostoolkit/k8scrd:latest
         imagePullPolicy: Always
+        command:
+          - kopf
+        args:
+          - run
+          - --namespace
+          - crd
+          - controller.py
         resources:
           requests:
             memory: "64Mi"

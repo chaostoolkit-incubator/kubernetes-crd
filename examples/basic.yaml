@@ -1,14 +1,14 @@
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: chaostoolkit-run
+#---
+#apiVersion: v1
+#kind: Namespace
+#metadata:
+#  name: chaostoolkit-run
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: chaostoolkit-experiment
-  namespace: chaostoolkit-run
+  namespace: crd
 data:
   experiment.json: |
     {
@@ -32,6 +32,6 @@ apiVersion: chaostoolkit.org/v1
 kind: ChaosToolkitExperiment
 metadata:
   name: my-chaos-exp
-  namespace: chaostoolkit-crd
+  namespace: crd
 spec:
-  namespace: chaostoolkit-run
+  namespace: crd
