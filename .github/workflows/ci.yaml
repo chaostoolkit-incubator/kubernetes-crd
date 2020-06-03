@@ -1,0 +1,56 @@
+name: 'Install K8s operator & run basic example'
+on:
+  - push
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@master
+      - name: 'Kustomize Build'
+        uses: karancode/kustomize-github-action@master
+        with:
+          kustomize_version: '3.0.0'
+          kustomize_build_dir: './manifests/overlays/generic-rbac'
+          kustomize_output_file: "operator.yaml"
+          enable_alpha_plugins: true
+      - name: 'Start K3s lightweight Kubernetes cluster'
+        uses: debianmaster/actions-k3s@v1.0.0
+        id: k3s
+        with:
+          version: 'v1.18.2-k3s1'
+      - name: 'Check K3s server is up&running'
+        run: |
+          sleep 10
+          kubectl get nodes
+          kubectl get pods -A
+      - name: 'Install the operator'
+        run: |
+          kubectl apply -f operator.yaml
+      - name: 'List namespaces'
+        run: |
+          kubectl get ns
+      - name: 'Check operator pod is running'
+        run: |
+          sleep 60
+          kubectl -n chaostoolkit-crd get deploy
+          kubectl -n chaostoolkit-crd get pods
+      - name: 'Create the example experiment'
+        run: |
+          kubectl apply -f examples/basic.yaml
+      - name: 'Check the chaostoolkit experiment'
+        run: |
+          kubectl -n chaostoolkit-crd get ctk
+      - name: 'Wait for experiment pod to run (docker pull & run experiment)'
+        run: |
+          sleep 120
+          kubectl -n chaostoolkit-run get pods
+      - name: 'Check operator logs'
+        run: |
+          kubectl -n chaostoolkit-crd logs -l app=chaostoolkit-crd
+      - name: 'Check chaostoolkit pod logs'
+        run: |
+          kubectl -n chaostoolkit-run logs -l app=chaostoolkit
+      - name: 'Assert experiment succeeded'
+        run: |
+          kubectl -n chaostoolkit-run get pods | grep chaos | grep Completed
