@@ -6,10 +6,6 @@ metadata:
 spec:
   scope: Namespaced
   group: chaostoolkit.org
-  versions:
-    - name: v1
-      served: true
-      storage: true
   names:
     kind: ChaosToolkitExperiment
     plural: chaosexperiments
@@ -17,3 +13,17 @@ spec:
     shortNames:
       - ctk
       - ctks
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+            status:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
