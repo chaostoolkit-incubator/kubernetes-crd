@@ -1,5 +1,5 @@
-kopf~=0.24
-kubernetes~=10.0
+kopf~=0.27
+kubernetes~=11.0
 pyyaml~=5.1
 google-auth~=1.6
 jsonpath-ng~=1.4
