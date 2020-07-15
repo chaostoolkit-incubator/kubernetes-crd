@@ -63,10 +63,12 @@ rules:
   - chaostoolkit.org
   resources:
   - chaosexperiments
+  - chaosexperiments/finalizers
   verbs:
   - list
   - watch
   - patch
+  - update
 - apiGroups:
   - policy
   - extensions
