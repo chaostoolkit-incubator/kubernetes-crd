@@ -8,9 +8,11 @@
 
 -   Fixes default pod args from environment variables [#47][47]
 -   Fixes error when creating experiment default config map [#48][48]
+-   Fixes error with empty value in `chaosArgs` list [#63][63]
 
 [47]: https://github.com/chaostoolkit-incubator/kubernetes-crd/issues/47
 [48]: https://github.com/chaostoolkit-incubator/kubernetes-crd/issues/48
+[63]: https://github.com/chaostoolkit-incubator/kubernetes-crd/issues/63
 
 ## [0.3.0][] - 2020-05-05
 

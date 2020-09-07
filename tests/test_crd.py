@@ -129,6 +129,18 @@ def test_set_chaos_cmd_args(generic: List['Resource']):
     assert ctk_pod["spec"]["containers"][0]["args"] == overridden_args
 
 
+def test_set_chaos_cmd_args_with_empty_values(generic: List['Resource']):
+    resource = generic[4]
+    ctk_pod = yaml.safe_load(resource["data"]["chaostoolkit-pod.yaml"])
+
+    expected = ["--verbose", "run", "/home/svc/experiment.json"]
+    overridden_args = expected + [None, ""]
+
+    set_chaos_cmd_args(ctk_pod, cmd_args=overridden_args)
+    assert "chaos" in ctk_pod["spec"]["containers"][0]["command"][0]
+    assert ctk_pod["spec"]["containers"][0]["args"] == expected
+
+
 def test_set_chaos_cmd_args_legacy(generic: List['Resource']):
     resource = generic[4]
     legacy_pod = """

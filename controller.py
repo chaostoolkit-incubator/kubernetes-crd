@@ -318,6 +318,9 @@ def set_chaos_cmd_args(pod_tpl: Dict[str, Any], cmd_args: List[str]):
     Beware the new style args must use the K8s env vars syntax: $()
     See: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#use-environment-variables-to-define-arguments
     """  # noqa: E501
+    # filter out empty values from command line arguments: None, ''
+    cmd_args = list(filter(None, cmd_args))
+
     spec = pod_tpl["spec"]
     for container in spec["containers"]:
         if container["name"] == "chaostoolkit":
