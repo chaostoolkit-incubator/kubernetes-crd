@@ -2,7 +2,11 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.3.1...HEAD
+
+## [0.3.1][] - 2020-09-07
+
+[0.3.1]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.3.0...0.3.1
 
 ### Changed
 
@@ -16,7 +20,7 @@
 
 ## [0.3.0][] - 2020-05-05
 
-[0.3.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/tree/0.3.0
+[0.3.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.2.0...0.3.0
 
 ### Added 
 
@@ -37,7 +41,7 @@
 
 ## [0.2.0][] - 2020-02-09
 
-[0.2.0]: https://github.com/chaostoolkit/chaostoolkit/compare/0.1.0...0.2.0
+[0.2.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.1.0...0.2.0
 
 ## [0.1.0][] - 2019-07-24
 
