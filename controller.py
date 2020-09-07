@@ -622,9 +622,11 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
             set_chaos_cmd_args(tpl, ["run", "$(EXPERIMENT_URL)"])
 
         if cmd_args:
+            # filter out empty values from command line arguments: None, ''
+            cmd_args = list(filter(None, cmd_args))
             logger.info(
                 f"Override default chaos command arguments: "
-                f"$ chaos {' '.join(cmd_args)}")
+                f"$ chaos {' '.join([str(arg) for arg in cmd_args])}")
             set_chaos_cmd_args(tpl, cmd_args)
 
     set_ns(tpl, ns)

@@ -4,6 +4,17 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.3.1...HEAD
 
+
+## [0.3.2][] - 2020-09-07
+
+[0.3.2]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.3.1...0.3.2
+
+### Changed
+
+-   Fixes error with empty value in `chaosArgs` list [#63][63]
+
+[63]: https://github.com/chaostoolkit-incubator/kubernetes-crd/issues/63
+
 ## [0.3.1][] - 2020-09-07
 
 [0.3.1]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.3.0...0.3.1
