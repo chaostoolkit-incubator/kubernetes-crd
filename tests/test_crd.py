@@ -2,7 +2,7 @@ from typing import List
 
 import yaml
 
-from controller import set_chaos_cmd_args
+from controller import set_chaos_cmd_args, set_sa_name
 
 
 def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
@@ -161,3 +161,21 @@ def test_set_chaos_cmd_args_legacy(generic: List['Resource']):
         "--verbose", "run", "/home/svc/experiment.json"])
     assert "chaos --verbose run /home/svc/experiment.json" in \
            ctk_pod["spec"]["containers"][0]["args"][-1]
+
+
+def test_set_sa_name(generic: List['Resource']):
+    pod_tpl = '''
+        apiVersion: v1
+        kind: Pod
+        spec:
+          serviceAccountName: chaostoolkit
+    '''
+
+    pod = yaml.safe_load(pod_tpl)
+    set_sa_name(pod, name_suffix="abc124")
+    assert pod["spec"]["serviceAccountName"] == "chaostoolkit-abc124"
+
+    pod = yaml.safe_load(pod_tpl)
+    set_sa_name(pod, name="my-custom-sa")
+    assert pod["spec"]["serviceAccountName"] == "my-custom-sa"
+
