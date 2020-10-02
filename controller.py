@@ -138,14 +138,22 @@ def set_pod_name(pod_tpl: Dict[str, Any], name_suffix: str) -> str:
     return pod_name
 
 
-def set_sa_name(pod_tpl: Dict[str, Any], name_suffix: str) -> str:
+def set_sa_name(pod_tpl: Dict[str, Any],
+                name: str = None,
+                name_suffix: str = None) -> str:
     """
     Set the service account name of the pod
 
+    If name is given, we use it as is
+    If name is not given, we use the default pod SA name
+    with an optional suffix
+
     Suffix with a random string so that we don't get conflicts.
     """
-    sa_name = pod_tpl["spec"]["serviceAccountName"]
-    sa_name = f"{sa_name}-{name_suffix}"
+    sa_name = name
+    if not sa_name:
+        sa_name = pod_tpl["spec"]["serviceAccountName"]
+        sa_name = f"{sa_name}-{name_suffix}"
     pod_tpl["spec"]["serviceAccountName"] = sa_name
 
 
@@ -566,6 +574,7 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
     logger = logging.getLogger('kopf.objects')
 
     pod_spec = cro_spec.get("pod", {})
+    sa_name = cro_spec.get("serviceaccount", {}).get("name")
 
     # did the user supply their own pod spec?
     tpl = pod_spec.get("template")
@@ -631,7 +640,7 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
 
     set_ns(tpl, ns)
     set_pod_name(tpl, name_suffix=name_suffix)
-    set_sa_name(tpl, name_suffix=name_suffix)
+    set_sa_name(tpl, name=sa_name, name_suffix=name_suffix)
     label(tpl, labels=cro_meta.get('labels', {}))
 
     if apply:
