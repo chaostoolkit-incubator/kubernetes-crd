@@ -4,6 +4,11 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.3.1...HEAD
 
+### Changed
+
+-   Fixes service account not used when name is defined [#64][64]
+
+[64]: https://github.com/chaostoolkit-incubator/kubernetes-crd/issues/64
 
 ## [0.3.2][] - 2020-09-07
 
