@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.3.3...HEAD
 
+### Changed
+
+-   Upgrade CRD to `apiextensions.k8s.io/v1` [#57][57]
+-   Upgrade `kopf` to version 0.27 [#57][57]
+
+[57]: https://github.com/chaostoolkit-incubator/kubernetes-crd/issues/57
+
+
 ## [0.3.3][] - 2020-10-02
 
 [0.3.3]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.3.2...0.3.3
