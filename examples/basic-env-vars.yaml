@@ -1,0 +1,50 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chaostoolkit-env
+  namespace: chaostoolkit-run
+data:
+  FIRST_NAME: "Jane"
+  SECOND_NAME: "Doe"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chaostoolkit-experiment
+  namespace: chaostoolkit-run
+data:
+  experiment.json: |
+    {
+      "version": "1.0.0",
+      "title": "Hello world!",
+      "description": "Say hello world.",
+      "configuration": {
+          "first_name": {
+              "type": "env",
+              "key": "FIRST_NAME"
+          },
+          "second_name": {
+              "type": "env",
+              "key": "SECOND_NAME"
+          }
+
+      },
+      "method": [
+        {
+          "type": "action",
+          "name": "say-hello",
+          "provider": {
+            "type": "process",
+            "path": "echo",
+            "arguments": "hello ${first_name} ${second_name}"
+          }
+        }
+      ]
+    }
+---
+apiVersion: chaostoolkit.org/v1
+kind: ChaosToolkitExperiment
+metadata:
+  name: my-chaos-exp
+  namespace: chaostoolkit-crd
