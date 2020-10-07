@@ -227,7 +227,7 @@ All the data of the config map will be injected as-is to the chaostoolkit pod.
 
 ### Pass Chaos Toolkit settings as a Kubernetes secret
 
-You may provide your own [settings](settings) to Chaos Toolkit, by setting a
+You may provide your own [settings][settings] to Chaos Toolkit, by setting a
 secret in Kubernetes.
 
 [settings]: https://docs.chaostoolkit.org/reference/usage/cli/#configure-the-chaos-toolkit
