@@ -14,8 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Upgrade CRD to `apiextensions.k8s.io/v1` [#57][57]
 -   Upgrade `kopf` to version 0.27 [#57][57]
 
-[57]: https://github.com/chaostoolkit-incubator/kubernetes-crd/issues/57
+### Fixed
 
+-   Keep default docker image from POD template, when not overridden in Experiment CRO [#67][67]
+
+[57]: https://github.com/chaostoolkit-incubator/kubernetes-crd/issues/57
+[67]: https://github.com/chaostoolkit-incubator/kubernetes-crd/issues/67
 
 ## [0.3.3][] - 2020-10-02
 
