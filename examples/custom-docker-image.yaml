@@ -1,0 +1,40 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: chaostoolkit-run
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chaostoolkit-experiment
+  namespace: chaostoolkit-run
+data:
+  experiment.json: |
+    {
+      "version": "1.0.0",
+      "title": "Hello world!",
+      "description": "Say hello world.",
+      "method": [
+        {
+          "type": "action",
+          "name": "say-hello",
+          "provider": {
+            "type": "process",
+            "path": "echo",
+            "arguments": "hello"
+          }
+        }
+      ]
+    }
+---
+apiVersion: chaostoolkit.org/v1
+kind: ChaosToolkitExperiment
+metadata:
+  name: my-chaos-exp
+  namespace: chaostoolkit-crd
+spec:
+  namespace: chaostoolkit-run
+  pod:
+    image: chaosiq/chaostoolkit:latest
+
