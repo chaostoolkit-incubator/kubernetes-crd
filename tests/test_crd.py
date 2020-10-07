@@ -22,7 +22,7 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
     assert resource["metadata"]["name"] == "chaostoolkit-run"
 
     resource = generic[2]
-    assert resource["apiVersion"] == "apiextensions.k8s.io/v1beta1"
+    assert resource["apiVersion"] == "apiextensions.k8s.io/v1"
     assert resource["kind"] == "CustomResourceDefinition"
     assert resource["metadata"]["name"] == "chaosexperiments.chaostoolkit.org"
     assert resource["metadata"]["labels"] == {
@@ -36,7 +36,22 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
         {
             "name": "v1",
             "served": True,
-            "storage": True
+            "storage": True,
+            "schema": {
+                "openAPIV3Schema": {
+                    "type": "object",
+                    "properties": {
+                        "spec": {
+                            "type": "object",
+                            "x-kubernetes-preserve-unknown-fields": True
+                        },
+                        "status": {
+                            "type": "object",
+                            "x-kubernetes-preserve-unknown-fields": True
+                        },
+                    }
+                }
+            }
         }
     ]
     assert resource["spec"]["names"] == {
@@ -45,7 +60,7 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
         "singular": "chaosexperiment",
         "shortNames": ["ctk", "ctks"]
     }
-    
+
     resource = generic[3]
     assert resource["apiVersion"] == "v1"
     assert resource["kind"] == "ServiceAccount"
