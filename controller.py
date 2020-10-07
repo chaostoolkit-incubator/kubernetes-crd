@@ -582,7 +582,7 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
     # if not, let's use the default one
     if not tpl:
         tpl = yaml.safe_load(configmap.data['chaostoolkit-pod.yaml'])
-        image_name = pod_spec.get("image", "chaostoolkit/chaostoolkit")
+        image_name = pod_spec.get("image")
         env_cm_name = pod_spec.get("env", {}).get(
             "configMapName", "chaostoolkit-env")
         env_cm_enabled = pod_spec.get("env", {}).get("enabled", True)
@@ -598,7 +598,10 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
             "configMapName", "chaostoolkit-experiment")
         cmd_args = pod_spec.get("chaosArgs", [])
 
-        set_image_name(tpl, image_name)
+        # if image name is not given in CRO,
+        # we keep the one defined by default in pod template from configmap
+        if image_name:
+            set_image_name(tpl, image_name)
 
         if not env_cm_enabled:
             logger.info("Removing default env configmap volume")
