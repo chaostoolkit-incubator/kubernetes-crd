@@ -468,6 +468,58 @@ resource:
 $ kubectl -n chaostoolkit-run get cronjobs
 ```
 
+## Run an experiment with custom docker image
+
+The default container image used by the operator is the official
+[Chaos Toollkit image][dockerfile] which embeds no
+[Chaos Toolkit extensions][ext].
+
+[dockerfile]: https://raw.githubusercontent.com/chaostoolkit/chaostoolkit/master/Dockerfile
+[ext]: https://docs.chaostoolkit.org/drivers/overview/
+
+This means that you will likely need to create your bespoke container image
+in order to use specific extensions.
+For instance, to install the Chaos Toolkit Kubernetes extension, create
+a Dockerfile like this:
+
+```dockerfile
+FROM chaostoolkit/chaostoolkit
+
+RUN apk update && \
+    apk add --virtual build-deps libffi-dev openssl-dev gcc python3-dev musl-dev && \
+    pip install --no-cache-dir chaostoolkit-kubernetes && \
+    apk del build-deps
+```
+
+Then create the image with docker:
+
+```
+$ docker build --tag my/chaostoolkit -f ./Dockerfile .
+```
+
+You can check your image contains the installed extensions as follows:
+
+```
+$ docker run --rm -it my/chaostoolkit info extensions
+```
+
+Once this image is pushed to any registry you can access, you need to
+let the operator know it must use it, by setting the `image` property
+within the POD spec definition.
+
+```yaml
+---
+apiVersion: chaostoolkit.org/v1
+kind: ChaosToolkitExperiment
+metadata:
+  name: my-chaos-exp
+  namespace: chaostoolkit-crd
+spec:
+  namespace: chaostoolkit-run
+  pod:
+    image: my/chaostoolkit
+```
+
 ### List running Chaos Toolkit experiments
 
 To list the running Chaos Toolkit experiments, use the `chaosexperiment` custom
