@@ -17,9 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 -   Keep default docker image from POD template, when not overridden in Experiment CRO [#67][67]
+-   Fix the finalizers issue when apply the ownerreference in serviceaccount [#60][60]
 
 [57]: https://github.com/chaostoolkit-incubator/kubernetes-crd/issues/57
 [67]: https://github.com/chaostoolkit-incubator/kubernetes-crd/issues/67
+[60]: https://github.com/chaostoolkit-incubator/kubernetes-crd/issues/60
+
 
 ## [0.3.3][] - 2020-10-02
 
