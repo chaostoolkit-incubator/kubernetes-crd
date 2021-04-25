@@ -42,7 +42,6 @@ async def create_chaos_experiment(
     if ns_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(ns_tpl, owner=body)
-            await update_namespace(v1, ns, ns_tpl)
     logger.info(f"chaostoolkit resources will be created in namespace '{ns}'")
 
     name_suffix = generate_name_suffix()
@@ -52,7 +51,7 @@ async def create_chaos_experiment(
     if sa_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(sa_tpl, owner=body)
-            await update_sa(v1, ns, sa_tpl)
+            logger.debug(str(sa_tpl))
         logger.info(f"Created service account")
 
     role_tpl = await create_role(
@@ -60,7 +59,6 @@ async def create_chaos_experiment(
     if role_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(role_tpl, owner=body)
-            await update_role(v1rbac, ns, role_tpl)
         logger.info(f"Created role")
 
     role_binding_tpl = await create_role_binding(
@@ -68,7 +66,6 @@ async def create_chaos_experiment(
     if role_binding_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(role_binding_tpl, owner=body)
-            await update_role_binding(v1rbac, ns, role_binding_tpl)
         logger.info(f"Created rolebinding")
 
     cm_tpl = await create_experiment_env_config_map(
@@ -77,7 +74,6 @@ async def create_chaos_experiment(
     if cm_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(cm_tpl, owner=body)
-            await update_config_map(v1, ns, cm_tpl)
         logger.info(f"Created experiment's env vars configmap")
 
     schedule = spec.get("schedule", {})
@@ -93,7 +89,6 @@ async def create_chaos_experiment(
                 if cron_tpl:
                     if not keep_resources_on_delete:
                         kopf.adopt(cron_tpl, owner=body)
-                        await update_cron_job(v1cron, ns, cron_tpl)
                     logger.info("Chaos Toolkit scheduled")
 
     else:
@@ -102,7 +97,6 @@ async def create_chaos_experiment(
         if pod_tpl:
             if not keep_resources_on_delete:
                 kopf.adopt(pod_tpl, owner=body)
-                await update_pod(v1, ns, pod_tpl)
             logger.info("Chaos Toolkit started")
 
 
@@ -513,12 +507,13 @@ def create_role(api: client.RbacAuthorizationV1Api, configmap: Resource,
             psp_rule = yaml.safe_load(
                 configmap.data['chaostoolkit-role-psp-rule.yaml'])
 
-            set_rule_psp_name(psp_rule, psp.metadata.name)
             tpl["rules"].append(psp_rule)
+            set_rule_psp_name(psp_rule, psp.metadata.name)
 
         logger.debug(f"Creating role with template:\n{tpl}")
         try:
-            api.create_namespaced_role(body=tpl, namespace=ns)
+            r = api.create_namespaced_role(body=tpl, namespace=ns)
+            logger.debug(str(r))
             return tpl
         except ApiException as e:
             if e.status == 409:
@@ -681,65 +676,3 @@ def create_cron_job(api: client.BatchV1beta1Api, configmap: Resource,
                 f"pattern '{schedule}' in ns '{ns}'")
 
     return tpl
-
-
-@run_async
-def update_namespace(api: client.CoreV1Api, name: str, body: str):
-    return api.patch_namespace(name, body)
-
-
-def _update_namespaced_resource(
-        api: Union[client.CoreV1Api, client.RbacAuthorizationV1Api],
-        ns: str,
-        resource: str,
-        body: str):
-    name = body.get("metadata", {}).get("name")
-    if not name:
-        return
-
-    api_func_name = f"patch_namespaced_{resource}"
-    api_func = getattr(api, api_func_name)
-    return api_func(name, ns, body)
-
-
-@run_async
-def update_sa(api: client.CoreV1Api, ns: str, body: str):
-    return _update_namespaced_resource(
-        api, ns, "service_account", body
-    )
-
-
-@run_async
-def update_role(api: client.RbacAuthorizationV1Api, ns: str, body: str):
-    return _update_namespaced_resource(
-        api, ns, "role", body
-    )
-
-
-@run_async
-def update_role_binding(api: client.RbacAuthorizationV1Api,
-                        ns: str, body: str):
-    return _update_namespaced_resource(
-        api, ns, "role_binding", body
-    )
-
-
-@run_async
-def update_config_map(api: client.CoreV1Api, ns: str, body: str):
-    return _update_namespaced_resource(
-        api, ns, "config_map", body
-    )
-
-
-@run_async
-def update_pod(api: client.CoreV1Api, ns: str, body: str):
-    return _update_namespaced_resource(
-        api, ns, "pod", body
-    )
-
-
-@run_async
-def update_cron_job(api: client.BatchV1beta1Api, ns: str, body: str):
-    return _update_namespaced_resource(
-        api, ns, "cron_job", body
-    )

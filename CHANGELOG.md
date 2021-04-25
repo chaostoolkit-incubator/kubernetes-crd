@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Moved container image to use Python 3.9
 
+### Fixed
+
+- Resources created by the controller were immediately deleted by kopf. They
+  are not anymore.
+
 ## [0.3.4][] - 2020-10-16
 
 [0.3.4]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.3.3...0.3.4
