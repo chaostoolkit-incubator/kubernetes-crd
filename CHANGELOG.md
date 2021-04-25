@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Moved container image to use Python 3.9
+- Upgrade `kopf` to version 1.30
+- Upgrade `kubernetes` client to version 12.0
 
 ### Fixed
 
