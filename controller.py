@@ -6,7 +6,6 @@ import string
 from typing import Any, Dict, List, NoReturn, Union, Optional
 
 import kopf
-from kopf.toolkits.hierarchies import label
 from kubernetes import client, config  # noqa: W0611
 from kubernetes.client.rest import ApiException
 import yaml
@@ -23,8 +22,8 @@ async def create_chaos_experiment(
     """
     Create a new pod running a Chaos Toolkit instance until it terminates.
 
-    If experiment is scheduled, create a new cronJob that will periodically
-    create a Chaos Toolkit instance.
+    If experiment is scheduled, create a new cronJob that will
+    periodically create a Chaos Toolkit instance.
     """
     v1 = client.CoreV1Api()
     v1rbac = client.RbacAuthorizationV1Api()
@@ -42,7 +41,8 @@ async def create_chaos_experiment(
     if ns_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(ns_tpl, owner=body)
-    logger.info(f"chaostoolkit resources will be created in namespace '{ns}'")
+    logger.info(
+        f"chaostoolkit resources will be created in namespace '{ns}'")
 
     name_suffix = generate_name_suffix()
     logger.info(f"Suffix for resource names will be '-{name_suffix}'")
@@ -85,7 +85,8 @@ async def create_chaos_experiment(
                 v1, cm, spec, ns, name_suffix, meta, apply=False)
             if pod_tpl:
                 cron_tpl = await create_cron_job(
-                    v1cron, cm, spec, ns, name_suffix, meta, pod_tpl=pod_tpl)
+                    v1cron, cm, spec, ns, name_suffix, meta,
+                    pod_tpl=pod_tpl)
                 if cron_tpl:
                     if not keep_resources_on_delete:
                         kopf.adopt(cron_tpl, owner=body)
@@ -358,9 +359,11 @@ def set_cron_job_name(cron_tpl: Dict[str, Any], name_suffix: str) -> str:
     return cron_name
 
 
-def set_cron_job_schedule(cron_tpl: Dict[str, Any], schedule: str) -> NoReturn:
+def set_cron_job_schedule(cron_tpl: Dict[str, Any],
+                          schedule: str) -> NoReturn:
     """
-    Set the cron job schedule, if specifed, otherwise leaves default schedule
+    Set the cron job schedule, if specifed, otherwise leaves default
+    schedule
     """
     if not schedule:
         return
@@ -525,12 +528,13 @@ def create_role(api: client.RbacAuthorizationV1Api, configmap: Resource,
 
 @run_async
 def create_role_binding(api: client.RbacAuthorizationV1Api,
-                        configmap: Resource, cro_spec: ResourceChunk, ns: str,
-                        name_suffix: str):
+                        configmap: Resource, cro_spec: ResourceChunk,
+                        ns: str, name_suffix: str):
     logger = logging.getLogger('kopf.objects')
     role_bind_name = cro_spec.get("role", {}).get("bind")
     if not role_bind_name:
-        tpl = yaml.safe_load(configmap.data['chaostoolkit-role-binding.yaml'])
+        tpl = yaml.safe_load(
+            configmap.data['chaostoolkit-role-binding.yaml'])
         role_binding_name = tpl["metadata"]["name"]
         role_binding_name = f"{role_binding_name}-{name_suffix}"
         tpl["metadata"]["name"] = role_binding_name
@@ -620,8 +624,10 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
 
         if experiment_as_file:
             logger.info(
-                f"Experiment config map named '{experiment_config_map_name}'")
-            set_experiment_config_map_name(tpl, experiment_config_map_name)
+                "Experiment config map named "
+                f"'{experiment_config_map_name}'")
+            set_experiment_config_map_name(
+                tpl, experiment_config_map_name)
         else:
             logger.info("Removing default experiment config map volume")
             remove_experiment_volume(tpl)
@@ -639,7 +645,7 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,
     set_ns(tpl, ns)
     set_pod_name(tpl, name_suffix=name_suffix)
     set_sa_name(tpl, name=sa_name, name_suffix=name_suffix)
-    label(tpl, labels=cro_meta.get('labels', {}))
+    kopf.label(tpl, labels=cro_meta.get('labels', {}))
 
     if apply:
         logger.debug(f"Creating pod with template:\n{tpl}")
@@ -665,9 +671,9 @@ def create_cron_job(api: client.BatchV1beta1Api, configmap: Resource,
     set_cron_job_template_spec(tpl, pod_tpl.get("spec", {}))
 
     experiment_labels = cro_meta.get('labels', {})
-    label(tpl, labels=experiment_labels)
-    label(tpl["spec"]["jobTemplate"], labels=experiment_labels)
-    label(tpl["spec"]["jobTemplate"]["spec"]["template"],
+    kopf.label(tpl, labels=experiment_labels)
+    kopf.label(tpl["spec"]["jobTemplate"], labels=experiment_labels)
+    kopf.label(tpl["spec"]["jobTemplate"]["spec"]["template"],
           labels=experiment_labels)
 
     logger.debug(f"Creating cron job with template:\n{tpl}")

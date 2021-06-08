@@ -1,5 +1,5 @@
-kopf~=1.30
-kubernetes~=12.0
-pyyaml~=5.1
-google-auth~=1.6
-jsonpath-ng~=1.4
+kopf~=1.32
+kubernetes~=17.0
+pyyaml~=5.4
+google-auth~=1.30
+jsonpath-ng~=1.5
