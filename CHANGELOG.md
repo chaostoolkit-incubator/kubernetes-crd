@@ -6,7 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.4.0...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.5.0...HEAD
+
+## [0.5.0][] - 2021-06-08
+
+[0.4.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.3.4...0.5.0
+
+### Changed
+
+- Updated RBAC to match kopf [definition][rbac]
+
+[rbac]: https://kopf.readthedocs.io/en/stable/deployment/#rbac
 
 ## [0.4.0][] - 2021-04-25
 

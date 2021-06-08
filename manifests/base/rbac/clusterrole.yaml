@@ -11,7 +11,7 @@ rules:
   verbs:
   - get
 - apiGroups:
-  - zalando.org
+  - kopf.dev
   resources:
   - clusterkopfpeerings
   verbs:
@@ -24,8 +24,8 @@ rules:
   resources:
   - customresourcedefinitions
   verbs:
-  - get
   - list
+  - watch
 - apiGroups:
   - ""
   resources:
@@ -37,9 +37,25 @@ rules:
   - list
   - patch
 - apiGroups:
+  - admissionregistration.k8s.io/v1
+  - admissionregistration.k8s.io/v1beta1
+  resources:
+  - validatingwebhookconfigurations
+  - mutatingwebhookconfigurations
+  verbs:
+  - create
+  - patch
+- apiGroups:
   - ""
   resources:
   - namespaces
+  verbs:
+  - create
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - serviceaccounts
   - pods
   verbs:
