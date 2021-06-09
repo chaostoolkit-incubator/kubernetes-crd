@@ -4,5 +4,6 @@ kind: Kustomization
 #namespace: chaostoolkit-crd
 
 resources:
+- ns.yaml
 - ../../base
 - ../../base/rbac
