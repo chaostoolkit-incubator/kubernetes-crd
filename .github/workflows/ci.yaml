@@ -23,7 +23,6 @@ jobs:
         pylama controller.py
     - name: Run tests
       run: |
-        pip install -e .
         pytest tests/
 
   ci:
