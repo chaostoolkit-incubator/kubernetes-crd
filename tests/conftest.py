@@ -20,7 +20,7 @@ def topdir():
 
 @pytest.fixture(scope="session")
 def generic(topdir: str) -> List[Resource]:
-    cp = subprocess.run("kustomize version", shell=True, check=True,
+    cp = subprocess.run("which kustomize", shell=True, check=True,
         cwd=topdir, capture_output=True)
     print(cp.stdout.decode("utf-8"))
 
