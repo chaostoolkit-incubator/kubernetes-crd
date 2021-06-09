@@ -3,8 +3,8 @@ FROM python:3.9-alpine
 ADD requirements.txt requirements.txt
 RUN apk add --no-cache --virtual build-deps gcc g++ linux-headers make \
         linux-headers musl-dev && \
-    pip install --no-cache-dir -q -U pip && \
-    pip install --no-cache-dir -r requirements.txt && \
+    pip install --prefer-binary --no-cache-dir -q -U pip && \
+    pip install --prefer-binary --no-cache-dir -r requirements.txt && \
     rm -rf /tmp/* /root/.cache && \
     apk del build-deps
 
