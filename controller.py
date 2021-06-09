@@ -16,7 +16,7 @@ ResourceChunk = Dict[str, Any]
 
 
 @kopf.on.create('chaostoolkit.org', 'v1', 'chaosexperiments')  # noqa: C901
-async def create_chaos_experiment(
+async def create_chaos_experiment(  # noqa: C901
         meta: ResourceChunk, body: Dict[str, Any], spec: ResourceChunk,
         namespace: str, logger: logging.Logger, **kwargs) -> NoReturn:
     """
@@ -566,8 +566,8 @@ def create_role_binding(api: client.RbacAuthorizationV1Api,
                     f"Failed to bind to role: {str(e)}")
 
 
-@run_async  # noqa: C901
-def create_pod(api: client.CoreV1Api, configmap: Resource,
+@run_async
+def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
                cro_spec: ResourceChunk, ns: str, name_suffix: str,
                cro_meta: ResourceChunk, *, apply: bool = True):
     logger = logging.getLogger('kopf.objects')
