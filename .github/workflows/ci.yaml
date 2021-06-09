@@ -29,6 +29,7 @@ jobs:
         kustomize version
     - name: Run tests
       run: |
+        export PATH=.:$PATH
         pytest -s tests/
 
   ci:
