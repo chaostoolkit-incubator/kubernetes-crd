@@ -10,6 +10,11 @@ jobs:
         python-version: [3.7, 3.8, 3.9]
     steps:
     - uses: actions/checkout@v2
+    - name: 'Kustomize Build'
+      uses: karancode/kustomize-github-action@master
+      with:
+        kustomize_version: '3.0.0'
+        enable_alpha_plugins: true
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
