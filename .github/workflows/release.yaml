@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+rc[0-9]+'
+
+
+jobs:
+  build-docker-image:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - run: echo "RELEASE_VERSION=${GITHUB_REF:10}" >> $GITHUB_ENV
+    - run: echo "Release new docker image with tag ${{ env.RELEASE_VERSION }}"
+    - name: Building the Docker image
+      env:
+        DOCKER_TAG: ${{ env.RELEASE_VERSION }}
+      run: |
+        docker build -t chaostoolkit/k8scrd .
+        docker tag chaostoolkit/k8scrd:latest chaostoolkit/k8scrd:${DOCKER_TAG}
+    - name: Publishing to the Docker repository
+      env:
+        DOCKER_TAG: ${{ env.RELEASE_VERSION }}
+        DOCKER_USER_NAME: chaostoolkit
+        DOCKER_PWD: ${{ secrets.DOCKER_PWD }}
+      run: |
+        docker login -u ${DOCKER_USER_NAME} -p ${DOCKER_PWD}
+        docker push chaostoolkit/k8scrd:$DOCKER_TAG
+        docker push chaostoolkit/k8scrd:latest
