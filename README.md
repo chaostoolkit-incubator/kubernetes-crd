@@ -143,6 +143,34 @@ You may decide to change various aspects of the final pod (such as passing
 settings as secrets, changing the roles allowed to the pod, even override
 the entire pod template).
 
+### Use the experiment in YAML format
+
+If your experiments are encoded using YAML, you can set it as follows:
+
+```yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chaostoolkit-experiment-1234
+  namespace: chaostoolkit-run
+data:
+  experiment.yaml: |
+    ---
+    title: "..."
+---
+apiVersion: chaostoolkit.org/v1
+kind: ChaosToolkitExperiment
+metadata:
+  name: my-chaos-exp
+  namespace: chaostoolkit-crd
+spec:
+  pod:
+    experiment:
+      configMapName: chaostoolkit-experiment-1234
+      configMapExperimentFileName: experiment.yaml
+```
+
 ### Run the experiment from a URL
 
 Let's say you store your experiments remotely and make them available over

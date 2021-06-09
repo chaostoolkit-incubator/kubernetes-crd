@@ -2,7 +2,8 @@ from typing import List
 
 import yaml
 
-from controller import set_chaos_cmd_args, set_sa_name
+from controller import set_chaos_cmd_args, set_sa_name, \
+    set_experiment_config_map_name
 
 
 def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
@@ -193,4 +194,16 @@ def test_set_sa_name(generic: List['Resource']):
     pod = yaml.safe_load(pod_tpl)
     set_sa_name(pod, name="my-custom-sa")
     assert pod["spec"]["serviceAccountName"] == "my-custom-sa"
+
+
+
+def test_use_experiment_as_yaml(generic: List['Resource']):
+    resource = generic[4]
+    ctk_pod = yaml.safe_load(resource["data"]["chaostoolkit-pod.yaml"])
+
+    set_experiment_config_map_name(ctk_pod, "my-cfg", "experiment.yaml")
+    assert ctk_pod["spec"]["volumes"][1]["configMap"]["name"] == "my-cfg"
+    assert ctk_pod["spec"]["containers"][0]["env"][1]["value"] == "/home/svc/experiment.yaml"
+    assert ctk_pod["spec"]["containers"][0]["volumeMounts"][1]["mountPath"] == "/home/svc/experiment.yaml"
+    assert ctk_pod["spec"]["containers"][0]["volumeMounts"][1]["subPath"] == "experiment.yaml"
 

@@ -288,7 +288,8 @@ def set_settings_secret_name(pod_tpl: Dict[str, Any], secret_name: str):
             break
 
 
-def set_experiment_config_map_name(pod_tpl: Dict[str, Any], cm_name: str):
+def set_experiment_config_map_name(pod_tpl: Dict[str, Any], cm_name: str,
+                                   experiment_file: str = "experiment.json"):
     """
     Set the experiment config map volume and volume mounts from the pod.
     """
@@ -297,6 +298,19 @@ def set_experiment_config_map_name(pod_tpl: Dict[str, Any], cm_name: str):
         if volume["name"] == "chaostoolkit-experiment":
             volume["configMap"]["name"] = cm_name
             break
+
+    for container in spec["containers"]:
+        if container["name"] == "chaostoolkit":
+            for e in container["env"]:
+                if e["name"] == "EXPERIMENT_PATH":
+                    e["value"] = f"/home/svc/{experiment_file}"
+                    break
+
+            for mount in container["volumeMounts"]:
+                if mount["name"] == "chaostoolkit-experiment":
+                    mount["mountPath"] = f"/home/svc/{experiment_file}"
+                    mount["subPath"] = experiment_file
+                    break
 
 
 def set_chaos_cmd_args(pod_tpl: Dict[str, Any], cmd_args: List[str]):
@@ -595,6 +609,8 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
             "experiment", {}).get("asFile", True)
         experiment_config_map_name = pod_spec.get("experiment", {}).get(
             "configMapName", "chaostoolkit-experiment")
+        experiment_config_map_file_name = pod_spec.get("experiment", {}).get(
+            "configMapExperimentFileName", "experiment.json")
         cmd_args = pod_spec.get("chaosArgs", [])
 
         # if image name is not given in CRO,
@@ -627,7 +643,8 @@ def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
                 "Experiment config map named "
                 f"'{experiment_config_map_name}'")
             set_experiment_config_map_name(
-                tpl, experiment_config_map_name)
+                tpl, experiment_config_map_name,
+                experiment_config_map_file_name)
         else:
             logger.info("Removing default experiment config map volume")
             remove_experiment_volume(tpl)
