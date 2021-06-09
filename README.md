@@ -1,6 +1,6 @@
 # Kubernetes CRD/operator for running Chaos Toolkit experiments on-demand
 
-[![Build Status](https://travis-ci.org/chaostoolkit-incubator/kubernetes-crd.svg?branch=master)](https://travis-ci.org/chaostoolkit-incubator/kubernetes-crd)
+[![Build](https://github.com/chaostoolkit-incubator/kubernetes-crd/actions/workflows/ci.yaml/badge.svg)](https://github.com/chaostoolkit-incubator/kubernetes-crd/actions/workflows/ci.yaml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/chaostoolkit/k8scrd)](https://hub.docker.com/r/chaostoolkit/k8scrd)
 
 This repository contains a Kubernetes operator to control Chaos Toolkit
