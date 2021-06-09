@@ -20,6 +20,10 @@ def topdir():
 
 @pytest.fixture(scope="session")
 def generic(topdir: str) -> List[Resource]:
+    cp = subprocess.run("kustomize version", shell=True, check=True,
+        cwd=topdir, capture_output=True)
+    print(cp.stdout.decode("utf-8"))
+
     cp = subprocess.run(
         "kustomize build manifests/overlays/generic", shell=True, check=True,
         cwd=topdir, capture_output=True)
