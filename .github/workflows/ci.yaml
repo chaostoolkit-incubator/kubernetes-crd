@@ -23,7 +23,7 @@ jobs:
         pylama controller.py
     - name: Run tests
       run: |
-        pytest tests/
+        pytest -s tests/
 
   ci:
     runs-on: ubuntu-latest
