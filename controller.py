@@ -566,7 +566,7 @@ def create_role_binding(api: client.RbacAuthorizationV1Api,
                     f"Failed to bind to role: {str(e)}")
 
 
-@run_async
+@run_async  # noqa: C901
 def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
                cro_spec: ResourceChunk, ns: str, name_suffix: str,
                cro_meta: ResourceChunk, *, apply: bool = True):
