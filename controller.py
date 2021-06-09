@@ -52,21 +52,21 @@ async def create_chaos_experiment(
         if not keep_resources_on_delete:
             kopf.adopt(sa_tpl, owner=body)
             logger.debug(str(sa_tpl))
-        logger.info(f"Created service account")
+        logger.info("Created service account")
 
     role_tpl = await create_role(
         v1rbac, cm, spec, ns, name_suffix, psp=psp)
     if role_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(role_tpl, owner=body)
-        logger.info(f"Created role")
+        logger.info("Created role")
 
     role_binding_tpl = await create_role_binding(
         v1rbac, cm, spec, ns, name_suffix)
     if role_binding_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(role_binding_tpl, owner=body)
-        logger.info(f"Created rolebinding")
+        logger.info("Created rolebinding")
 
     cm_tpl = await create_experiment_env_config_map(
         v1, ns, spec.get("pod", {}).get("env", {}).get(
@@ -74,7 +74,7 @@ async def create_chaos_experiment(
     if cm_tpl:
         if not keep_resources_on_delete:
             kopf.adopt(cm_tpl, owner=body)
-        logger.info(f"Created experiment's env vars configmap")
+        logger.info("Created experiment's env vars configmap")
 
     schedule = spec.get("schedule", {})
     if schedule:
@@ -566,7 +566,7 @@ def create_role_binding(api: client.RbacAuthorizationV1Api,
                     f"Failed to bind to role: {str(e)}")
 
 
-@run_async
+@run_async  # noqa: C901
 def create_pod(api: client.CoreV1Api, configmap: Resource,
                cro_spec: ResourceChunk, ns: str, name_suffix: str,
                cro_meta: ResourceChunk, *, apply: bool = True):
@@ -673,8 +673,9 @@ def create_cron_job(api: client.BatchV1beta1Api, configmap: Resource,
     experiment_labels = cro_meta.get('labels', {})
     kopf.label(tpl, labels=experiment_labels)
     kopf.label(tpl["spec"]["jobTemplate"], labels=experiment_labels)
-    kopf.label(tpl["spec"]["jobTemplate"]["spec"]["template"],
-          labels=experiment_labels)
+    kopf.label(
+        tpl["spec"]["jobTemplate"]["spec"]["template"],
+        labels=experiment_labels)
 
     logger.debug(f"Creating cron job with template:\n{tpl}")
     cron = api.create_namespaced_cron_job(body=tpl, namespace=ns)
