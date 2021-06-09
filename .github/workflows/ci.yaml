@@ -10,7 +10,7 @@ jobs:
       - name: 'Kustomize Build'
         uses: karancode/kustomize-github-action@master
         with:
-          kustomize_version: '3.8.1'
+          kustomize_version: '3.0.0'
           kustomize_build_dir: './manifests/overlays/generic-rbac'
           kustomize_output_file: "operator.yaml"
           enable_alpha_plugins: true
