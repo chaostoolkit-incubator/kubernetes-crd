@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support for setting the experiment as a YAML file [#71][71]
+- Delete handler so that resources are deleted when experiment object is deleted
+- Upgraded various API to match Kubernetes 1.22
+- Upgraded Kubernetes and Google auth libraries
 
 [71]: https://github.com/chaostoolkit-incubator/kubernetes-crd/issues/71
 
