@@ -128,7 +128,7 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
     assert ctk_pod["metadata"]["name"] == "chaostoolkit"
 
     ctk_cron = yaml.safe_load(resource["data"]["chaostoolkit-cronjob.yaml"])
-    assert ctk_cron["apiVersion"] == "batch/v1beta1"
+    assert ctk_cron["apiVersion"] == "batch/v1"
     assert ctk_cron["kind"] == "CronJob"
     assert ctk_cron["metadata"]["name"] == "chaostoolkit"
 
