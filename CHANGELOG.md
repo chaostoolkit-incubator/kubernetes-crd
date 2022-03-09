@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.6.0...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.7.0...HEAD
+
+## [0.7.0][] - 2022-03-09
+
+[0.7.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.6.0...0.7.0
 
 ### Changed
 
@@ -18,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Only logging errors on deletion of objects so there iis a chance all of them
   get to be deleted at least once
 
-## [0.6.0][] - 2021-06-08
+## [0.6.0][] - 2022-03-09
 
 [0.6.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.5.0...0.6.0
 
