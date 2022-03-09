@@ -38,7 +38,8 @@ async def create_chaos_experiment(  # noqa: C901
     ns, _ = await create_ns(v1, cm, spec)
     await create_sa(v1, cm, spec, ns, name_suffix)
     await create_role(v1rbac, cm, spec, ns, name_suffix, psp=psp)
-    await create_role_binding(v1rbac, cm, spec, ns, name_suffix)
+    await create_role_binding(v1rbac, cm, spec, ns, ns, name_suffix)
+    await bind_role_to_namespaces(v1rbac, cm, spec, ns, name_suffix, psp=psp)
     await create_experiment_env_config_map(v1, ns, spec, name_suffix)
 
     schedule = spec.get("schedule", {})
@@ -80,6 +81,7 @@ async def delete_chaos_experiment(  # noqa: C901
         await delete_experiment_env_config_map(
             v1, ns, spec.get("pod", {}).get("env", {}).get(
                 "configMapName", "chaostoolkit-env"), name_suffix)
+        await unbind_role_from_namespaces(v1rbac, cm, spec, ns, name_suffix)
         await delete_role_binding(
             v1rbac, cm, spec, ns, name_suffix)
         await delete_role(v1rbac, cm, spec, ns, name_suffix)
@@ -609,7 +611,7 @@ def delete_role(api: client.RbacAuthorizationV1Api, configmap: Resource,
 @run_async
 def create_role_binding(api: client.RbacAuthorizationV1Api,
                         configmap: Resource, cro_spec: ResourceChunk,
-                        ns: str, name_suffix: str):
+                        ns: str, sa_ns: str, name_suffix: str):
     logger = logging.getLogger('kopf.objects')
     role_bind_name = cro_spec.get("role", {}).get("bind")
     if not role_bind_name:
@@ -625,11 +627,13 @@ def create_role_binding(api: client.RbacAuthorizationV1Api,
         tpl["subjects"][0]["name"] = sa_name
 
         # change sa subject namespace
-        tpl["subjects"][0]["namespace"] = ns
+        tpl["subjects"][0]["namespace"] = sa_ns
 
         # change role name
-        role_name = tpl["roleRef"]["name"]
-        role_name = f"{role_name}-{name_suffix}"
+        role_name = cro_spec.get("role", {}).get("name")
+        if not role_name:
+            role_name = tpl["roleRef"]["name"]
+            role_name = f"{role_name}-{name_suffix}"
         tpl["roleRef"]["name"] = role_name
 
         set_ns(tpl, ns)
@@ -643,6 +647,41 @@ def create_role_binding(api: client.RbacAuthorizationV1Api,
             else:
                 raise kopf.PermanentError(
                     f"Failed to bind to role: {str(e)}")
+
+
+async def bind_role_to_namespaces(api: client.RbacAuthorizationV1Api,
+                                  configmap: Resource, cro_spec: ResourceChunk,
+                                  ns: str, name_suffix: str,
+                                  psp: client.V1beta1PodSecurityPolicy = None):
+    """
+    Binds the role to other namespaces so the experiment can perform ops
+    in them.
+    """
+    bind_ns = cro_spec.get("role", {}).get("binds_to_namespaces", [])
+    if not bind_ns:
+        return
+
+    for bind in bind_ns:
+        await create_role(api, configmap, cro_spec, bind, name_suffix, psp)
+        await create_role_binding(
+            api, configmap, cro_spec, bind, ns, name_suffix)
+
+
+async def unbind_role_from_namespaces(api: client.RbacAuthorizationV1Api,
+                                      configmap: Resource,
+                                      cro_spec: ResourceChunk, ns: str,
+                                      name_suffix: str):
+    """
+    Unbinds the role from other namespaces so the experiment can perform ops
+    in them.
+    """
+    bind_ns = cro_spec.get("role", {}).get("binds_to_namespaces", [])
+    if not bind_ns:
+        return
+
+    for bind in bind_ns:
+        await delete_role(api, configmap, cro_spec, bind, name_suffix)
+        await delete_role_binding(api, configmap, cro_spec, bind, name_suffix)
 
 
 @run_async

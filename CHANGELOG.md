@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.6.0...HEAD
 
+### Changed
+
+- Extended basic role given to experiment service account so that it can do a
+  bit more
+- Ensured default RBAC was deployed in target namespaces so that an experiment
+  can perform actions againt these namespaces
+
 ## [0.6.0][] - 2021-06-08
 
 [0.6.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.5.0...0.6.0

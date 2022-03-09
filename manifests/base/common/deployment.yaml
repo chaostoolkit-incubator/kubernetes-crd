@@ -16,12 +16,13 @@ spec:
       serviceAccountName: chaostoolkit-crd
       containers:
       - name: crd
-        image: chaostoolkit/k8scrd:latest
+        image: lawouach/k8scrd:latest
         imagePullPolicy: Always
         command:
         - kopf
         args:
         - run
+        - --verbose
         - --namespace
         - chaostoolkit-crd
         - controller.py

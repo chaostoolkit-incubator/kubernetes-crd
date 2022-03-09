@@ -99,8 +99,18 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
     assert ctk_role["rules"] == [
         {
             "apiGroups": [""],
-            "resources": ["pods"],
+            "resources": ["pods", "deployments", "services", "endpoints", "configmaps"],
             "verbs": ["create", "get", "delete", "list"]
+        },
+        {
+            "apiGroups": ["networking.k8s.io"],
+            "resources": ["ingresses"],
+            "verbs": ["create", "get", "delete", "list"]
+        },
+        {
+            "apiGroups": [""],
+            "resources": ["events"],
+            "verbs": ["list"]
         }
     ]
 

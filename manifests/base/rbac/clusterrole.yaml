@@ -58,12 +58,30 @@ rules:
   resources:
   - serviceaccounts
   - pods
+  - deployments
+  - endpoints
+  - services
   verbs:
   - create
   - get
   - delete
   - list
   - patch
+- apiGroups:
+  - "networking.k8s.io"
+  resources:
+  - ingresses
+  verbs:
+  - "create"
+  - "get"
+  - "delete"
+  - "list"
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - list
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:
