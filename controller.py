@@ -84,7 +84,7 @@ async def delete_chaos_experiment(  # noqa: C901
             v1rbac, cm, spec, ns, name_suffix)
         await delete_role(v1rbac, cm, spec, ns, name_suffix)
         await delete_sa(v1, cm, spec, ns, name_suffix)
-    except Exception as x:
+    except Exception:
         logger.error(
             f"Failed to delete objects with suffix '-{name_suffix}' in "
             f"ns '{ns}'", exc_info=True)
@@ -429,7 +429,7 @@ def create_experiment_env_config_map(v1: client.CoreV1Api(), namespace: str,
     try:
         v1.read_namespaced_config_map(
             namespace=namespace, name="chaostoolkit-env")
-        logger.info(f"Reusing existing default 'chaostoolkit-env' configmap")
+        logger.info("Reusing existing default 'chaostoolkit-env' configmap")
     except ApiException:
         spec_env = spec.get("pod", {}).get("env", {})
         cm_name = spec_env.get("configMapName", "chaostoolkit-env")
@@ -527,7 +527,8 @@ def create_sa(api: client.CoreV1Api, configmap: Resource,
         set_ns(tpl, ns)
         logger.debug(f"Creating service account with template:\n{tpl}")
         try:
-            return api.create_namespaced_service_account(body=tpl, namespace=ns)
+            return api.create_namespaced_service_account(
+                body=tpl, namespace=ns)
         except ApiException as e:
             if e.status == 409:
                 logger.info(f"Service account '{sa_name}' already exists.")
