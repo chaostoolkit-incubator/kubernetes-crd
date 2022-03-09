@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9, "3,10"]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -35,7 +35,7 @@ jobs:
       - name: 'Kustomize Build'
         uses: karancode/kustomize-github-action@master
         with:
-          kustomize_version: '4.1.3'
+          kustomize_version: '4.5.2'
           kustomize_build_dir: './manifests/overlays/generic-rbac'
           kustomize_output_file: "operator.yaml"
           enable_alpha_plugins: false
