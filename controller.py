@@ -441,7 +441,7 @@ def create_experiment_env_config_map(v1: client.CoreV1Api(), namespace: str,
             return v1.create_namespaced_config_map(namespace, body)
         except ApiException as e:
             raise kopf.PermanentError(
-                    f"Failed to create experiment configmap: {str(e)}")
+                f"Failed to create experiment configmap: {str(e)}")
 
 
 @run_async
@@ -460,7 +460,7 @@ def delete_experiment_env_config_map(v1: client.CoreV1Api(), namespace: str,
                 name=name, namespace=namespace)
         except ApiException as e:
             raise kopf.PermanentError(
-                    f"Failed to delete experiment configmap: {str(e)}")
+                f"Failed to delete experiment configmap: {str(e)}")
 
 
 @run_async
@@ -552,7 +552,7 @@ def delete_sa(api: client.CoreV1Api, configmap: Resource,
                 name=sa_name, namespace=ns)
         except ApiException as e:
             raise kopf.PermanentError(
-                    f"Failed to delete service account: {str(e)}")
+                f"Failed to delete service account: {str(e)}")
 
 
 @run_async
