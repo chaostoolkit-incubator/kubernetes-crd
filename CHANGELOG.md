@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   bit more
 - Ensured default RBAC was deployed in target namespaces so that an experiment
   can perform actions againt these namespaces
+- Moving to only async handlers
+- Only logging errors on deletion of objects so there iis a chance all of them
+  get to be deleted at least once
 
 ## [0.6.0][] - 2021-06-08
 
