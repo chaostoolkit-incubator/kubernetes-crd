@@ -24,7 +24,7 @@ spec:
         - run
         - --verbose
         - --namespace
-        - chaostoolkit-crd
+        - keos-chaostoolkit-crd
         - controller.py
         resources:
           requests:

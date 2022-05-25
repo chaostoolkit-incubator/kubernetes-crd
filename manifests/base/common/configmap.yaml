@@ -74,7 +74,7 @@ data:
     subjects:
     - kind: ServiceAccount
       name: chaostoolkit
-      namespace: chaostoolkit-run
+      namespace: keos-chaostoolkit-run
 
   chaostoolkit-pod.yaml: |-
     apiVersion: v1

@@ -3,7 +3,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: deny-all
-  namespace: chaostoolkit-run
+  namespace: keos-chaostoolkit-run
 spec:
   podSelector: {}
   policyTypes:
@@ -14,7 +14,7 @@ kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: allow-chaostoolkit-to-cluster-dns
-  namespace: chaostoolkit-run
+  namespace: keos-chaostoolkit-run
 spec:
   policyTypes:
   - Egress
@@ -34,7 +34,7 @@ kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
   name: allow-chaostoolkit-to-secured-external
-  namespace: chaostoolkit-run
+  namespace: keos-chaostoolkit-run
 spec:
   policyTypes:
   - Egress

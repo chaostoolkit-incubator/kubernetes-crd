@@ -10,5 +10,5 @@ apiVersion: chaostoolkit.org/v1
 kind: ChaosToolkitExperiment
 metadata:
   name: my-chaos-exp
-  namespace: chaostoolkit-crd
+  namespace: keos-chaostoolkit-crd
 spec: {}
