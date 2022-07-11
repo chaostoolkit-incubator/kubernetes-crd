@@ -1,4 +1,4 @@
-FROM python:3.9-alpine
+FROM python:3.11-rc-alpine
 
 ADD requirements.txt requirements.txt
 RUN apk add --no-cache --virtual build-deps gcc g++ linux-headers make \
