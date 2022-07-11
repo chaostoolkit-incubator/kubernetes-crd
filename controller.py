@@ -704,7 +704,7 @@ async def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
 
     # if not, let's use the default one
     if not tpl:
-        logger.info(
+        logger.debug(
             "Using default deployment template for the run ending with "
             f"suffix '{name_suffix}'")
         tpl = yaml.safe_load(configmap.data['chaostoolkit-pod.yaml'])
@@ -770,11 +770,10 @@ async def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
                 f"$ chaos {' '.join([str(arg) for arg in cmd_args])}")
             set_chaos_cmd_args(tpl, cmd_args)
     else:
-        logger.info(
+        logger.debug(
             "Using provided deployment template for the run ending with "
             f"suffix '{name_suffix}':\n{tpl}")
-        if isinstance(tpl, list):
-            tpl = tpl[0]
+        tpl = yaml.safe_load(tpl)
 
     set_ns(tpl, ns)
     set_pod_name(tpl, name_suffix=name_suffix)
@@ -787,7 +786,7 @@ async def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
     if apply:
         logger.debug(f"Creating pod with template:\n{tpl}")
         pod = api.create_namespaced_pod(body=tpl, namespace=ns)
-        logger.info(f"Pod {pod.metadata.self_link} created in ns '{ns}'")
+        logger.info(f"Pod {pod.metadata.name} created in ns '{ns}'")
         return pod
 
     return tpl
@@ -801,6 +800,8 @@ async def delete_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
     tpl = pod_spec.get("template")
     if not tpl:
         tpl = yaml.safe_load(configmap.data['chaostoolkit-pod.yaml'])
+    else:
+        tpl = yaml.safe_load(tpl)
 
     pod_name = tpl["metadata"]["name"]
     pod_name = f"{pod_name}-{name_suffix}"
@@ -834,7 +835,7 @@ async def create_cron_job(api: client.BatchV1Api, configmap: Resource,
 
     logger.debug(f"Creating cron job with template:\n{tpl}")
     cron = api.create_namespaced_cron_job(body=tpl, namespace=ns)
-    logger.info(f"Cron Job '{cron.metadata.self_link}' scheduled with "
+    logger.info(f"Cron Job '{cron.metadata.name}' scheduled with "
                 f"pattern '{schedule}' in ns '{ns}'")
 
     return cron
