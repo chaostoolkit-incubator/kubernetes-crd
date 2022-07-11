@@ -772,7 +772,7 @@ async def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
     else:
         logger.info(
             "Using provided deployment template for the run ending with "
-            f"suffix '{name_suffix}'")
+            f"suffix '{name_suffix}':\n{tpl}")
         if isinstance(tpl, list):
             tpl = tpl[0]
 
