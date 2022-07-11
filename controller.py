@@ -704,6 +704,9 @@ async def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
 
     # if not, let's use the default one
     if not tpl:
+        logger.info(
+            "Using default deployment template for the run ending with "
+            f"suffix '{name_suffix}'")
         tpl = yaml.safe_load(configmap.data['chaostoolkit-pod.yaml'])
         image_name = pod_spec.get("image")
         env_cm_enabled = pod_spec.get("env", {}).get("enabled", True)
@@ -766,6 +769,12 @@ async def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
                 f"Override default chaos command arguments: "
                 f"$ chaos {' '.join([str(arg) for arg in cmd_args])}")
             set_chaos_cmd_args(tpl, cmd_args)
+    else:
+        logger.info(
+            "Using provided deployment template for the run ending with "
+            f"suffix '{name_suffix}'")
+        if isinstance(tpl, list):
+            tpl = tpl[0]
 
     set_ns(tpl, ns)
     set_pod_name(tpl, name_suffix=name_suffix)
