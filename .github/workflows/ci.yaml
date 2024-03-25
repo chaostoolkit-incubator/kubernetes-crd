@@ -11,11 +11,11 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up PDM
-        uses: pdm-project/setup-pdm@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: true
-          prerelease: true
+      uses: pdm-project/setup-pdm@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: true
+        prerelease: true
     - name: Ensure lock file is up to date
         run: |
           pdm lock --check
