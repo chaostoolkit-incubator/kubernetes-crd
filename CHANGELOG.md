@@ -3,11 +3,11 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.8.0...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.9.0...HEAD
 
-## [0.8.0][] - 2024-03-25
+## [0.9.0][] - 2024-03-25
 
-[0.8.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.7.0...0.8.0
+[0.9.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.7.0...0.9.0
 
 ### Changed
 
