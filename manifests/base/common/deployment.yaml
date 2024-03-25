@@ -7,16 +7,28 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: chaostoolkit
+      app.kubernetes.io/name: chaostoolkit
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
   template:
     metadata:
       labels:
         app: chaostoolkit
     spec:
       serviceAccountName: chaostoolkit-crd
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: chaostoolkit
       containers:
       - name: crd
-        image: lawouach/k8scrd:latest
+        image: chaostoolkit/k8scrd:latest
         imagePullPolicy: Always
         command:
         - kopf
@@ -28,8 +40,13 @@ spec:
         - controller.py
         resources:
           requests:
-            memory: "64Mi"
+            memory: "128Mi"
             cpu: "100m"
           limits:
-            memory: "64Mi"
+            memory: "128Mi"
             cpu: "100m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1001

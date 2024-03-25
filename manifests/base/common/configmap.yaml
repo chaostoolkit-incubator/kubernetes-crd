@@ -72,9 +72,17 @@ data:
       name: chaostoolkit
       labels:
         app: chaostoolkit
+        app.kubernetes.io/name: chaostoolkit
     spec:
       restartPolicy: Never
       serviceAccountName: chaostoolkit
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: chaostoolkit
       containers:
       - name: chaostoolkit
         image: chaostoolkit/chaostoolkit
@@ -107,6 +115,10 @@ data:
           mountPath: /home/svc/experiment.json
           subPath: experiment.json
           readOnly: true
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
       volumes:
       - name: chaostoolkit-settings
         secret:

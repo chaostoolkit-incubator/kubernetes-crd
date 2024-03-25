@@ -1,12 +1,13 @@
 # Changelog
-All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.7.0...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.8.0...HEAD
+
+## [0.8.0][] - 2024-03-25
+
+[0.8.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.7.0...0.8.0
 
 ### Changed
 
@@ -15,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Removed Pod Security Policy support since they have been deprecated some time
   ago now
 * Switched base image of the container to `ubuntu`
+* Added a security context block to the deployment of the crd and the
+  chaostoolkit pods
+* Added a topology spread constraint block to the deployment of the crd and the
+  chaostoolkit pods
 
 ## [0.7.0][] - 2022-03-09
 
