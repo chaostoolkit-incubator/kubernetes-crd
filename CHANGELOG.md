@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.7.0...HEAD
 
+### Changed
+
+* Switched to `ruff` for code linting
+* Switched to `pdm` for project management
+* Removed Pod Security Policy support since they have been deprecated some time
+  ago now
+
 ## [0.7.0][] - 2022-03-09
 
 [0.7.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.6.0...0.7.0

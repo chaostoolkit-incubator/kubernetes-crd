@@ -1,0 +1,68 @@
+[project]
+name = "kubernetes-crd"
+dynamic = ["version"]
+description = "Kubernetes Operator for Chaos Toolkit"
+authors = [
+    {name = "Sylvain Hellegouarch", email = "sh@defuze.org"},
+]
+dependencies = [
+    "kopf>=1.35",
+    "kubernetes>=23.3",
+    "pyyaml>=6.0",
+    "google-auth>=2.6",
+    "jsonpath-ng>=1.5",
+]
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+
+
+[tool.pdm]
+distribution = false
+version = { source = "scm" }
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pytest>=8.1.1",
+    "coverage>=7.4.4",
+    "ruff>=0.3.4",
+    "pytest-cov>=5.0.0",
+    "pytest-sugar>=1.0.0",
+    "requests-mock>=1.11.0",
+    "asynctest>=0.13.0",
+    "pytest-asyncio>=0.23.6",
+    "better-exceptions>=0.3.3",
+]
+
+[tool.ruff]
+line-length = 80
+exclude = [
+    ".eggs",
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "build",
+    "dist",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = false
+
+
+[tool.pdm.scripts]
+lint = {composite = ["ruff check controller.py"]}
+format = {composite = ["ruff format controller.py"]}
+test = {cmd = "pytest"}
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = "tests"
+addopts = "-v -rxs --cov controller --cov-report term-missing:skip-covered -p no:warnings"

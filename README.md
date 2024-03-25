@@ -17,7 +17,7 @@ welcome to do so. Please fork this project, make your changes following the
 usual [PEP 8][pep8] code style, add appropriate tests and submit a PR for
 review.
 
-[pep8]: https://pycodestyle.readthedocs.io/en/latest/
+[pep8]: https://peps.python.org/pep-0008/
 
 The Chaos Toolkit projects require all contributors must sign a
 [Developer Certificate of Origin][dco] on each commit they would like to merge

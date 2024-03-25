@@ -116,3 +116,6 @@ test.json
 .kube/
 .pytest-kind/
 .idea/
+
+.pdm-python
+.ruff_cache/

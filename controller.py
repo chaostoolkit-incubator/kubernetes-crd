@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Union, Optional
 
 import kopf
 from kopf._cogs.structs import bodies
-from kubernetes import client, config  # noqa: W0611
+from kubernetes import client
 from kubernetes.client.rest import ApiException
 import yaml
 
@@ -13,10 +13,15 @@ Resource = Dict[str, Any]
 ResourceChunk = Dict[str, Any]
 
 
-@kopf.on.create('chaostoolkit.org', 'v1', 'chaosexperiments')  # noqa: C901
+@kopf.on.create("chaostoolkit.org", "v1", "chaosexperiments")  # noqa: C901
 async def create_chaos_experiment(  # noqa: C901
-        meta: ResourceChunk, body: bodies.Body, spec: ResourceChunk,
-        namespace: str, logger: logging.Logger, **kwargs) -> None:
+    meta: ResourceChunk,
+    body: bodies.Body,
+    spec: ResourceChunk,
+    namespace: str,
+    logger: logging.Logger,
+    **kwargs,
+) -> None:
     """
     Create a new pod running a Chaos Toolkit instance until it terminates.
 
@@ -32,37 +37,50 @@ async def create_chaos_experiment(  # noqa: C901
     logger.info(f"Suffix for resource names will be '-{name_suffix}'")
 
     cm = await get_config_map(v1, spec, namespace)
-    psp = await get_default_psp(v1policy)
     ns, _ = await create_ns(v1, cm, spec)
     await create_sa(v1, cm, spec, ns, name_suffix)
-    await create_role(v1rbac, cm, spec, ns, name_suffix, psp=psp)
+    await create_role(v1rbac, cm, spec, ns, name_suffix)
     await create_role_binding(v1rbac, cm, spec, ns, ns, name_suffix)
-    await bind_role_to_namespaces(v1rbac, cm, spec, ns, name_suffix, psp=psp)
+    await bind_role_to_namespaces(v1rbac, cm, spec, ns, name_suffix)
     _, cm_was_created = await create_experiment_env_config_map(
-        v1, ns, spec, name_suffix)
+        v1, ns, spec, name_suffix
+    )
 
     schedule = spec.get("schedule", {})
     if schedule:
-        if schedule.get('kind').lower() == 'cronjob':
+        if schedule.get("kind").lower() == "cronjob":
             # when schedule defined, we cannot create the pod directly,
             # we must create a cronJob with the pod definition
             pod_tpl = await create_pod(
-                v1, cm, spec, ns, name_suffix, meta, apply=False,
-                cm_was_created=cm_was_created)
+                v1,
+                cm,
+                spec,
+                ns,
+                name_suffix,
+                meta,
+                apply=False,
+                cm_was_created=cm_was_created,
+            )
             if pod_tpl:
                 await create_cron_job(
-                    v1cron, cm, spec, ns, name_suffix, meta,
-                    pod_tpl=pod_tpl)
+                    v1cron, cm, spec, ns, name_suffix, meta, pod_tpl=pod_tpl
+                )
     else:
         # create pod for running experiment right away
         pod_tpl = await create_pod(
-            v1, cm, spec, ns, name_suffix, meta, cm_was_created=cm_was_created)
+            v1, cm, spec, ns, name_suffix, meta, cm_was_created=cm_was_created
+        )
 
 
-@kopf.on.delete('chaostoolkit.org', 'v1', 'chaosexperiments')  # noqa: C901
+@kopf.on.delete("chaostoolkit.org", "v1", "chaosexperiments")  # noqa: C901
 async def delete_chaos_experiment(  # noqa: C901
-        meta: ResourceChunk, body: bodies.Body, spec: ResourceChunk,
-        namespace: str, logger: logging.Logger, **kwargs) -> None:
+    meta: ResourceChunk,
+    body: bodies.Body,
+    spec: ResourceChunk,
+    namespace: str,
+    logger: logging.Logger,
+    **kwargs,
+) -> None:
     v1 = client.CoreV1Api()
     v1rbac = client.RbacAuthorizationV1Api()
     v1cron = client.BatchV1Api()
@@ -75,22 +93,28 @@ async def delete_chaos_experiment(  # noqa: C901
         cm = await get_config_map(v1, spec, namespace)
         schedule = spec.get("schedule", {})
         if schedule:
-            if schedule.get('kind').lower() == 'cronjob':
+            if schedule.get("kind").lower() == "cronjob":
                 await delete_cron_job(v1cron, cm, spec, ns, name_suffix)
         else:
             await delete_pod(v1, cm, spec, ns, name_suffix)
         await delete_experiment_env_config_map(
-            v1, ns, spec.get("pod", {}).get("env", {}).get(
-                "configMapName", "chaostoolkit-env"), name_suffix)
+            v1,
+            ns,
+            spec.get("pod", {})
+            .get("env", {})
+            .get("configMapName", "chaostoolkit-env"),
+            name_suffix,
+        )
         await unbind_role_from_namespaces(v1rbac, cm, spec, ns, name_suffix)
-        await delete_role_binding(
-            v1rbac, cm, spec, ns, name_suffix)
+        await delete_role_binding(v1rbac, cm, spec, ns, name_suffix)
         await delete_role(v1rbac, cm, spec, ns, name_suffix)
         await delete_sa(v1, cm, spec, ns, name_suffix)
     except Exception:
         logger.error(
             f"Failed to delete objects with suffix '-{name_suffix}' in "
-            f"ns '{ns}'", exc_info=True)
+            f"ns '{ns}'",
+            exc_info=True,
+        )
 
 
 ###############################################################################
@@ -109,7 +133,8 @@ def set_ns(resource: Union[Dict[str, Any], List[Dict[str, Any]]], ns: str):
 
 def generate_name_suffix(body: bodies.Body, suffix_length: int = 5) -> str:
     return hashlib.blake2b(
-        body["metadata"]["uid"].encode('utf-8'), digest_size=5).hexdigest()
+        body["metadata"]["uid"].encode("utf-8"), digest_size=5
+    ).hexdigest()
 
 
 def set_pod_name(pod_tpl: Dict[str, Any], name_suffix: str) -> str:
@@ -124,9 +149,9 @@ def set_pod_name(pod_tpl: Dict[str, Any], name_suffix: str) -> str:
     return pod_name
 
 
-def set_sa_name(pod_tpl: Dict[str, Any],
-                name: str = None,
-                name_suffix: str = None) -> str:
+def set_sa_name(
+    pod_tpl: Dict[str, Any], name: str = None, name_suffix: str = None
+) -> str:
     """
     Set the service account name of the pod
 
@@ -143,9 +168,12 @@ def set_sa_name(pod_tpl: Dict[str, Any],
     pod_tpl["spec"]["serviceAccountName"] = sa_name
 
 
-def set_cm_env_name(pod_tpl: Dict[str, Any], name: str = None,
-                    name_suffix: str = None,
-                    cm_was_created: bool = True) -> str:
+def set_cm_env_name(
+    pod_tpl: Dict[str, Any],
+    name: str = None,
+    name_suffix: str = None,
+    cm_was_created: bool = True,
+) -> str:
     """
     Set the config map ref name of the pod
     """
@@ -263,11 +291,7 @@ def add_env_secret(pod_tpl: Dict[str, Any], secret_name: str):
     for container in spec["containers"]:
         if container["name"] == "chaostoolkit":
             container.setdefault("envFrom", []).append(
-                {
-                    "secretRef": {
-                        "name": secret_name
-                    }
-                }
+                {"secretRef": {"name": secret_name}}
             )
             break
 
@@ -297,8 +321,11 @@ def set_settings_secret_name(pod_tpl: Dict[str, Any], secret_name: str):
             break
 
 
-def set_experiment_config_map_name(pod_tpl: Dict[str, Any], cm_name: str,
-                                   experiment_file: str = "experiment.json"):
+def set_experiment_config_map_name(
+    pod_tpl: Dict[str, Any],
+    cm_name: str,
+    experiment_file: str = "experiment.json",
+):
     """
     Set the experiment config map volume and volume mounts from the pod.
     """
@@ -355,19 +382,11 @@ def set_chaos_cmd_args(pod_tpl: Dict[str, Any], cmd_args: List[str]):
                 container["args"] = cmd_args
             else:
                 # legacy syntax: pod command is a new shell
-                args_as_str = ' '.join(cmd_args)
+                args_as_str = " ".join(cmd_args)
                 new_cmd = "/usr/local/bin/chaos {args} && exit $?".format(
-                    args=args_as_str)
+                    args=args_as_str
+                )
                 container["args"][-1] = new_cmd
-
-
-def set_rule_psp_name(rule_tpl: Dict[str, Any], name: str) -> None:
-    """
-    Set the name of the PSP to be used on a role rule
-    """
-    if name:
-        if rule_tpl["resources"] == ["podsecuritypolicies"]:
-            rule_tpl["resourceNames"] = [name]
 
 
 def set_cron_job_name(cron_tpl: Dict[str, Any], name_suffix: str) -> str:
@@ -382,8 +401,7 @@ def set_cron_job_name(cron_tpl: Dict[str, Any], name_suffix: str) -> str:
     return cron_name
 
 
-def set_cron_job_schedule(cron_tpl: Dict[str, Any],
-                          schedule: str) -> None:
+def set_cron_job_schedule(cron_tpl: Dict[str, Any], schedule: str) -> None:
     """
     Set the cron job schedule, if specifed, otherwise leaves default
     schedule
@@ -396,22 +414,26 @@ def set_cron_job_schedule(cron_tpl: Dict[str, Any],
 
 
 def set_cron_job_template_spec(
-        cron_tpl: Dict[str, Any], tpl_spec: Dict[str, Any]) -> None:
+    cron_tpl: Dict[str, Any], tpl_spec: Dict[str, Any]
+) -> None:
     """
     Set the spec for the cron job template
     """
     cron_spec = cron_tpl.setdefault("spec", {})
-    _tpl = cron_spec.setdefault(
-        "jobTemplate", {}).setdefault(
-        "spec", {}).setdefault(
-        "template", {})
+    _tpl = (
+        cron_spec.setdefault("jobTemplate", {})
+        .setdefault("spec", {})
+        .setdefault("template", {})
+    )
     _tpl["spec"] = tpl_spec
 
 
-async def create_experiment_env_config_map(v1: client.CoreV1Api(),
-                                           namespace: str,
-                                           spec: Dict[str, Any],
-                                           name_suffix: str = None):
+async def create_experiment_env_config_map(
+    v1: client.CoreV1Api,
+    namespace: str,
+    spec: Dict[str, Any],
+    name_suffix: str = None,
+):
     """
     Create the default configmap to hold experiment environment variables,
     in case it wasn't already created by the user.
@@ -419,12 +441,13 @@ async def create_experiment_env_config_map(v1: client.CoreV1Api(),
     If it already exists, we do not return it so that the operator does not
     take its ownership.
     """
-    logger = logging.getLogger('kopf.objects')
+    logger = logging.getLogger("kopf.objects")
     created = False
 
     try:
         cm = v1.read_namespaced_config_map(
-            namespace=namespace, name="chaostoolkit-env")
+            namespace=namespace, name="chaostoolkit-env"
+        )
         logger.info("Reusing existing default 'chaostoolkit-env' configmap")
     except ApiException:
         spec_env = spec.get("pod", {}).get("env", {})
@@ -438,58 +461,51 @@ async def create_experiment_env_config_map(v1: client.CoreV1Api(),
             created = True
         except ApiException as e:
             raise kopf.PermanentError(
-                f"Failed to create experiment configmap: {str(e)}")
+                f"Failed to create experiment configmap: {str(e)}"
+            )
 
     return cm, created
 
 
-async def delete_experiment_env_config_map(v1: client.CoreV1Api(),
-                                           namespace: str,
-                                           name: str = "chaostoolkit-env",
-                                           name_suffix: str = None):
-    logger = logging.getLogger('kopf.objects')
+async def delete_experiment_env_config_map(
+    v1: client.CoreV1Api,
+    namespace: str,
+    name: str = "chaostoolkit-env",
+    name_suffix: str = None,
+):
+    logger = logging.getLogger("kopf.objects")
     name = f"{name}-{name_suffix}"
     logger.info("Deleting '{name}' configmap")
     try:
-        return v1.delete_namespaced_config_map(
-            name=name, namespace=namespace)
+        return v1.delete_namespaced_config_map(name=name, namespace=namespace)
     except ApiException:
         logger.error(
-            f"Failed to delete experiment configmap '{name}'", exc_info=True)
+            f"Failed to delete experiment configmap '{name}'", exc_info=True
+        )
 
 
-async def get_config_map(v1: client.CoreV1Api(), spec: Dict[str, Any],
-                         namespace: str):
+async def get_config_map(
+    v1: client.CoreV1Api, spec: Dict[str, Any], namespace: str
+):
     cm_pod_spec_name = spec.get("template", {}).get(
-        "name", "chaostoolkit-resources-templates")
+        "name", "chaostoolkit-resources-templates"
+    )
     cm = v1.read_namespaced_config_map(
-        namespace=namespace, name=cm_pod_spec_name)
+        namespace=namespace, name=cm_pod_spec_name
+    )
     return cm
 
 
-async def get_default_psp(v1: client.PolicyV1beta1Api,
-                          name: str = 'chaostoolkit-run'
-                          ) -> Optional[client.V1beta1PodSecurityPolicy]:
-    """
-    Get the default PodSecurityPolicy for the CTK pod,
-    if the CRD is installed with podsec variant.
-    """
-    logger = logging.getLogger('kopf.objects')
-    try:
-        return v1.read_pod_security_policy(name=name)
-    except ApiException:
-        logger.info("Default PSP for chaostoolkit not found.")
-
-
-async def create_ns(api: client.CoreV1Api, configmap: Resource,
-                    cro_spec: ResourceChunk) -> Union[str, Resource]:
+async def create_ns(
+    api: client.CoreV1Api, configmap: Resource, cro_spec: ResourceChunk
+) -> Union[str, Resource]:
     """
     If it already exists, we do not return it so that the operator does not
     take its ownership.
     """
-    logger = logging.getLogger('kopf.objects')
+    logger = logging.getLogger("kopf.objects")
     ns_name = cro_spec.get("namespace", "chaostoolkit-run")
-    tpl = yaml.safe_load(configmap.data['chaostoolkit-ns.yaml'])
+    tpl = yaml.safe_load(configmap.data["chaostoolkit-ns.yaml"])
     tpl["metadata"]["name"] = ns_name
     logger.debug(f"Creating namespace with template:\n{tpl}")
     try:
@@ -499,73 +515,79 @@ async def create_ns(api: client.CoreV1Api, configmap: Resource,
         if e.status == 409:
             logger.info(
                 f"Namespace '{ns_name}' already exists. Let's continue...",
-                exc_info=False)
+                exc_info=False,
+            )
             return ns_name, None
         else:
-            raise kopf.PermanentError(
-                f"Failed to create namespace: {str(e)}")
+            raise kopf.PermanentError(f"Failed to create namespace: {str(e)}")
 
 
-async def create_sa(api: client.CoreV1Api, configmap: Resource,
-                    cro_spec: ResourceChunk, ns: str, name_suffix: str):
-    logger = logging.getLogger('kopf.objects')
+async def create_sa(
+    api: client.CoreV1Api,
+    configmap: Resource,
+    cro_spec: ResourceChunk,
+    ns: str,
+    name_suffix: str,
+):
+    logger = logging.getLogger("kopf.objects")
     sa_name = cro_spec.get("serviceaccount", {}).get("name")
     if not sa_name:
-        tpl = yaml.safe_load(configmap.data['chaostoolkit-sa.yaml'])
+        tpl = yaml.safe_load(configmap.data["chaostoolkit-sa.yaml"])
         sa_name = tpl["metadata"]["name"]
         sa_name = f"{sa_name}-{name_suffix}"
         tpl["metadata"]["name"] = sa_name
         set_ns(tpl, ns)
         logger.debug(f"Creating service account with template:\n{tpl}")
         try:
-            return api.create_namespaced_service_account(
-                body=tpl, namespace=ns)
+            return api.create_namespaced_service_account(body=tpl, namespace=ns)
         except ApiException as e:
             if e.status == 409:
                 logger.info(f"Service account '{sa_name}' already exists.")
             else:
                 raise kopf.PermanentError(
-                    f"Failed to create service account: {str(e)}")
+                    f"Failed to create service account: {str(e)}"
+                )
 
 
-async def delete_sa(api: client.CoreV1Api, configmap: Resource,
-                    cro_spec: ResourceChunk, ns: str, name_suffix: str):
-    logger = logging.getLogger('kopf.objects')
+async def delete_sa(
+    api: client.CoreV1Api,
+    configmap: Resource,
+    cro_spec: ResourceChunk,
+    ns: str,
+    name_suffix: str,
+):
+    logger = logging.getLogger("kopf.objects")
     sa_name = cro_spec.get("serviceaccount", {}).get("name")
     if not sa_name:
-        tpl = yaml.safe_load(configmap.data['chaostoolkit-sa.yaml'])
+        tpl = yaml.safe_load(configmap.data["chaostoolkit-sa.yaml"])
         sa_name = tpl["metadata"]["name"]
         sa_name = f"{sa_name}-{name_suffix}"
         logger.debug(f"Deleting service account: {sa_name}")
         try:
             return api.delete_namespaced_service_account(
-                name=sa_name, namespace=ns)
+                name=sa_name, namespace=ns
+            )
         except ApiException:
             logger.error(
-                f"Failed to delete service account '{sa_name}'", exc_info=True)
+                f"Failed to delete service account '{sa_name}'", exc_info=True
+            )
 
 
-async def create_role(api: client.RbacAuthorizationV1Api, configmap: Resource,
-                      cro_spec: ResourceChunk, ns: str, name_suffix: str,
-                      psp: client.V1beta1PodSecurityPolicy = None):
-    logger = logging.getLogger('kopf.objects')
+async def create_role(
+    api: client.RbacAuthorizationV1Api,
+    configmap: Resource,
+    cro_spec: ResourceChunk,
+    ns: str,
+    name_suffix: str,
+):
+    logger = logging.getLogger("kopf.objects")
     role_name = cro_spec.get("role", {}).get("name")
     if not role_name:
-        tpl = yaml.safe_load(configmap.data['chaostoolkit-role.yaml'])
+        tpl = yaml.safe_load(configmap.data["chaostoolkit-role.yaml"])
         role_name = tpl["metadata"]["name"]
         role_name = f"{role_name}-{name_suffix}"
         tpl["metadata"]["name"] = role_name
         set_ns(tpl, ns)
-
-        # when a PSP is defined, we add a rule to use that PSP
-        if psp:
-            logger.info(
-                f"Adding pod security policy {psp.metadata.name} use to role")
-            psp_rule = yaml.safe_load(
-                configmap.data['chaostoolkit-role-psp-rule.yaml'])
-
-            tpl["rules"].append(psp_rule)
-            set_rule_psp_name(psp_rule, psp.metadata.name)
 
         logger.debug(f"Creating role with template:\n{tpl}")
         try:
@@ -574,16 +596,20 @@ async def create_role(api: client.RbacAuthorizationV1Api, configmap: Resource,
             if e.status == 409:
                 logger.info(f"Role '{role_name}' already exists.")
             else:
-                raise kopf.PermanentError(
-                    f"Failed to create role: {str(e)}")
+                raise kopf.PermanentError(f"Failed to create role: {str(e)}")
 
 
-async def delete_role(api: client.RbacAuthorizationV1Api, configmap: Resource,
-                      cro_spec: ResourceChunk, ns: str, name_suffix: str):
-    logger = logging.getLogger('kopf.objects')
+async def delete_role(
+    api: client.RbacAuthorizationV1Api,
+    configmap: Resource,
+    cro_spec: ResourceChunk,
+    ns: str,
+    name_suffix: str,
+):
+    logger = logging.getLogger("kopf.objects")
     role_name = cro_spec.get("role", {}).get("name")
     if not role_name:
-        tpl = yaml.safe_load(configmap.data['chaostoolkit-role.yaml'])
+        tpl = yaml.safe_load(configmap.data["chaostoolkit-role.yaml"])
         role_name = tpl["metadata"]["name"]
         role_name = f"{role_name}-{name_suffix}"
         logger.debug(f"Deleting role with template: {role_name}")
@@ -593,14 +619,18 @@ async def delete_role(api: client.RbacAuthorizationV1Api, configmap: Resource,
             logger.error(f"Failed to delete role '{role_name}'", exc_info=True)
 
 
-async def create_role_binding(api: client.RbacAuthorizationV1Api,
-                              configmap: Resource, cro_spec: ResourceChunk,
-                              ns: str, sa_ns: str, name_suffix: str):
-    logger = logging.getLogger('kopf.objects')
+async def create_role_binding(
+    api: client.RbacAuthorizationV1Api,
+    configmap: Resource,
+    cro_spec: ResourceChunk,
+    ns: str,
+    sa_ns: str,
+    name_suffix: str,
+):
+    logger = logging.getLogger("kopf.objects")
     role_bind_name = cro_spec.get("role", {}).get("bind")
     if not role_bind_name:
-        tpl = yaml.safe_load(
-            configmap.data['chaostoolkit-role-binding.yaml'])
+        tpl = yaml.safe_load(configmap.data["chaostoolkit-role-binding.yaml"])
         role_binding_name = tpl["metadata"]["name"]
         role_binding_name = f"{role_binding_name}-{name_suffix}"
         tpl["metadata"]["name"] = role_binding_name
@@ -627,16 +657,19 @@ async def create_role_binding(api: client.RbacAuthorizationV1Api,
         except ApiException as e:
             if e.status == 409:
                 logger.info(
-                    f"Role binding '{role_binding_name}' already exists.")
+                    f"Role binding '{role_binding_name}' already exists."
+                )
             else:
-                raise kopf.PermanentError(
-                    f"Failed to bind to role: {str(e)}")
+                raise kopf.PermanentError(f"Failed to bind to role: {str(e)}")
 
 
-async def bind_role_to_namespaces(api: client.RbacAuthorizationV1Api,
-                                  configmap: Resource, cro_spec: ResourceChunk,
-                                  ns: str, name_suffix: str,
-                                  psp: client.V1beta1PodSecurityPolicy = None):
+async def bind_role_to_namespaces(
+    api: client.RbacAuthorizationV1Api,
+    configmap: Resource,
+    cro_spec: ResourceChunk,
+    ns: str,
+    name_suffix: str,
+):
     """
     Binds the role to other namespaces so the experiment can perform ops
     in them.
@@ -646,15 +679,19 @@ async def bind_role_to_namespaces(api: client.RbacAuthorizationV1Api,
         return
 
     for bind in bind_ns:
-        await create_role(api, configmap, cro_spec, bind, name_suffix, psp)
+        await create_role(api, configmap, cro_spec, bind, name_suffix)
         await create_role_binding(
-            api, configmap, cro_spec, bind, ns, name_suffix)
+            api, configmap, cro_spec, bind, ns, name_suffix
+        )
 
 
-async def unbind_role_from_namespaces(api: client.RbacAuthorizationV1Api,
-                                      configmap: Resource,
-                                      cro_spec: ResourceChunk, ns: str,
-                                      name_suffix: str):
+async def unbind_role_from_namespaces(
+    api: client.RbacAuthorizationV1Api,
+    configmap: Resource,
+    cro_spec: ResourceChunk,
+    ns: str,
+    name_suffix: str,
+):
     """
     Unbinds the role from other namespaces so the experiment can perform ops
     in them.
@@ -668,36 +705,49 @@ async def unbind_role_from_namespaces(api: client.RbacAuthorizationV1Api,
         await delete_role_binding(api, configmap, cro_spec, bind, name_suffix)
 
 
-async def delete_role_binding(api: client.RbacAuthorizationV1Api,
-                              configmap: Resource, cro_spec: ResourceChunk,
-                              ns: str, name_suffix: str):
-    logger = logging.getLogger('kopf.objects')
+async def delete_role_binding(
+    api: client.RbacAuthorizationV1Api,
+    configmap: Resource,
+    cro_spec: ResourceChunk,
+    ns: str,
+    name_suffix: str,
+):
+    logger = logging.getLogger("kopf.objects")
     role_bind_name = cro_spec.get("role", {}).get("bind")
     if not role_bind_name:
-        tpl = yaml.safe_load(
-            configmap.data['chaostoolkit-role-binding.yaml'])
+        tpl = yaml.safe_load(configmap.data["chaostoolkit-role-binding.yaml"])
         role_binding_name = tpl["metadata"]["name"]
         role_binding_name = f"{role_binding_name}-{name_suffix}"
         logger.debug(f"Deleting role binding: {role_binding_name}")
         try:
             return api.delete_namespaced_role_binding(
-                name=role_binding_name, namespace=ns)
+                name=role_binding_name, namespace=ns
+            )
         except ApiException:
             logger.error(
                 f"Failed to delete role binding '{role_binding_name}'",
-                exc_info=True)
+                exc_info=True,
+            )
 
 
-async def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
-                    cro_spec: ResourceChunk, ns: str, name_suffix: str,
-                    cro_meta: ResourceChunk, *, apply: bool = True,
-                    cm_was_created: bool = True):
-    logger = logging.getLogger('kopf.objects')
+async def create_pod(
+    api: client.CoreV1Api,
+    configmap: Resource,  # noqa: C901
+    cro_spec: ResourceChunk,
+    ns: str,
+    name_suffix: str,
+    cro_meta: ResourceChunk,
+    *,
+    apply: bool = True,
+    cm_was_created: bool = True,
+):
+    logger = logging.getLogger("kopf.objects")
 
     pod_spec = cro_spec.get("pod", {})
     sa_name = cro_spec.get("serviceaccount", {}).get("name")
     env_cm_name = pod_spec.get("env", {}).get(
-        "configMapName", "chaostoolkit-env")
+        "configMapName", "chaostoolkit-env"
+    )
 
     # did the user supply their own pod spec?
     tpl = pod_spec.get("template")
@@ -706,22 +756,26 @@ async def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
     if not tpl:
         logger.debug(
             "Using default deployment template for the run ending with "
-            f"suffix '{name_suffix}'")
-        tpl = yaml.safe_load(configmap.data['chaostoolkit-pod.yaml'])
+            f"suffix '{name_suffix}'"
+        )
+        tpl = yaml.safe_load(configmap.data["chaostoolkit-pod.yaml"])
         image_name = pod_spec.get("image")
         env_cm_enabled = pod_spec.get("env", {}).get("enabled", True)
         # optional support for loading secret keys as env. variables
         env_secret_name = pod_spec.get("env", {}).get("secretName")
         settings_secret_enabled = pod_spec.get("settings", {}).get(
-            "enabled", False)
+            "enabled", False
+        )
         settings_secret_name = pod_spec.get("settings", {}).get(
-            "secretName", "chaostoolkit-settings")
-        experiment_as_file = pod_spec.get(
-            "experiment", {}).get("asFile", True)
+            "secretName", "chaostoolkit-settings"
+        )
+        experiment_as_file = pod_spec.get("experiment", {}).get("asFile", True)
         experiment_config_map_name = pod_spec.get("experiment", {}).get(
-            "configMapName", "chaostoolkit-experiment")
+            "configMapName", "chaostoolkit-experiment"
+        )
         experiment_config_map_file_name = pod_spec.get("experiment", {}).get(
-            "configMapExperimentFileName", "experiment.json")
+            "configMapExperimentFileName", "experiment.json"
+        )
         cmd_args = pod_spec.get("chaosArgs", [])
 
         # if image name is not given in CRO,
@@ -737,8 +791,10 @@ async def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
             set_env_config_map_name(tpl, env_cm_name)
 
         if env_secret_name and env_cm_enabled:
-            logger.info(f"Adding secret '{env_secret_name}' "
-                        f"as environment variables")
+            logger.info(
+                f"Adding secret '{env_secret_name}' "
+                f"as environment variables"
+            )
             add_env_secret(tpl, env_secret_name)
 
         if not settings_secret_enabled:
@@ -746,16 +802,17 @@ async def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
             remove_settings_secret(tpl)
         elif settings_secret_name:
             logger.info(
-                f"Settings secret volume named '{settings_secret_name}'")
+                f"Settings secret volume named '{settings_secret_name}'"
+            )
             set_settings_secret_name(tpl, settings_secret_name)
 
         if experiment_as_file:
             logger.info(
-                "Experiment config map named "
-                f"'{experiment_config_map_name}'")
+                "Experiment config map named " f"'{experiment_config_map_name}'"
+            )
             set_experiment_config_map_name(
-                tpl, experiment_config_map_name,
-                experiment_config_map_file_name)
+                tpl, experiment_config_map_name, experiment_config_map_file_name
+            )
         else:
             logger.info("Removing default experiment config map volume")
             remove_experiment_volume(tpl)
@@ -767,21 +824,23 @@ async def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
             cmd_args = list(filter(None, cmd_args))
             logger.info(
                 f"Override default chaos command arguments: "
-                f"$ chaos {' '.join([str(arg) for arg in cmd_args])}")
+                f"$ chaos {' '.join([str(arg) for arg in cmd_args])}"
+            )
             set_chaos_cmd_args(tpl, cmd_args)
     else:
         logger.debug(
             "Using provided deployment template for the run ending with "
-            f"suffix '{name_suffix}':\n{tpl}")
+            f"suffix '{name_suffix}':\n{tpl}"
+        )
         tpl = yaml.safe_load(tpl)
 
     set_ns(tpl, ns)
     set_pod_name(tpl, name_suffix=name_suffix)
     set_sa_name(tpl, name=sa_name, name_suffix=name_suffix)
     set_cm_env_name(
-        tpl, env_cm_name, name_suffix=name_suffix,
-        cm_was_created=cm_was_created)
-    kopf.label(tpl, labels=cro_meta.get('labels', {}))
+        tpl, env_cm_name, name_suffix=name_suffix, cm_was_created=cm_was_created
+    )
+    kopf.label(tpl, labels=cro_meta.get("labels", {}))
 
     if apply:
         logger.debug(f"Creating pod with template:\n{tpl}")
@@ -792,14 +851,19 @@ async def create_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
     return tpl
 
 
-async def delete_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
-                     cro_spec: ResourceChunk, ns: str, name_suffix: str):
-    logger = logging.getLogger('kopf.objects')
+async def delete_pod(
+    api: client.CoreV1Api,
+    configmap: Resource,  # noqa: C901
+    cro_spec: ResourceChunk,
+    ns: str,
+    name_suffix: str,
+):
+    logger = logging.getLogger("kopf.objects")
 
     pod_spec = cro_spec.get("pod", {})
     tpl = pod_spec.get("template")
     if not tpl:
-        tpl = yaml.safe_load(configmap.data['chaostoolkit-pod.yaml'])
+        tpl = yaml.safe_load(configmap.data["chaostoolkit-pod.yaml"])
     else:
         tpl = yaml.safe_load(tpl)
 
@@ -812,44 +876,56 @@ async def delete_pod(api: client.CoreV1Api, configmap: Resource,  # noqa: C901
         logger.error(f"Failed to delete pod '{pod_name}'", exc_info=True)
 
 
-async def create_cron_job(api: client.BatchV1Api, configmap: Resource,
-                          cro_spec: ResourceChunk, ns: str, name_suffix: str,
-                          cro_meta: ResourceChunk, pod_tpl: str):
-    logger = logging.getLogger('kopf.objects')
+async def create_cron_job(
+    api: client.BatchV1Api,
+    configmap: Resource,
+    cro_spec: ResourceChunk,
+    ns: str,
+    name_suffix: str,
+    cro_meta: ResourceChunk,
+    pod_tpl: str,
+):
+    logger = logging.getLogger("kopf.objects")
 
     schedule_spec = cro_spec.get("schedule", {})
     schedule = schedule_spec.get("value")
 
-    tpl = yaml.safe_load(configmap.data['chaostoolkit-cronjob.yaml'])
+    tpl = yaml.safe_load(configmap.data["chaostoolkit-cronjob.yaml"])
     set_ns(tpl, ns)
     set_cron_job_name(tpl, name_suffix=name_suffix)
     set_cron_job_schedule(tpl, schedule)
     set_cron_job_template_spec(tpl, pod_tpl.get("spec", {}))
 
-    experiment_labels = cro_meta.get('labels', {})
+    experiment_labels = cro_meta.get("labels", {})
     kopf.label(tpl, labels=experiment_labels)
     kopf.label(tpl["spec"]["jobTemplate"], labels=experiment_labels)
     kopf.label(
-        tpl["spec"]["jobTemplate"]["spec"]["template"],
-        labels=experiment_labels)
+        tpl["spec"]["jobTemplate"]["spec"]["template"], labels=experiment_labels
+    )
 
     logger.debug(f"Creating cron job with template:\n{tpl}")
     cron = api.create_namespaced_cron_job(body=tpl, namespace=ns)
-    logger.info(f"Cron Job '{cron.metadata.name}' scheduled with "
-                f"pattern '{schedule}' in ns '{ns}'")
+    logger.info(
+        f"Cron Job '{cron.metadata.name}' scheduled with "
+        f"pattern '{schedule}' in ns '{ns}'"
+    )
 
     return cron
 
 
-async def delete_cron_job(api: client.BatchV1Api, configmap: Resource,
-                          cro_spec: ResourceChunk, ns: str, name_suffix: str):
-    logger = logging.getLogger('kopf.objects')
-    tpl = yaml.safe_load(configmap.data['chaostoolkit-cronjob.yaml'])
+async def delete_cron_job(
+    api: client.BatchV1Api,
+    configmap: Resource,
+    cro_spec: ResourceChunk,
+    ns: str,
+    name_suffix: str,
+):
+    logger = logging.getLogger("kopf.objects")
+    tpl = yaml.safe_load(configmap.data["chaostoolkit-cronjob.yaml"])
     cron_job_name = tpl["metadata"]["name"]
     cron_job_name = f"{cron_job_name}-{name_suffix}"
     logger.debug(f"Deleting cron job: {cron_job_name}")
     try:
         return api.delete_namespaced_cron_job(name=cron_job_name, namespace=ns)
     except ApiException:
-        logger.error(
-            f"Failed to cron job '{cron_job_name}'", exc_info=True)
+        logger.error(f"Failed to cron job '{cron_job_name}'", exc_info=True)

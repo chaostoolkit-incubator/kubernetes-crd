@@ -7,23 +7,30 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9, "3.10"]
+        python-version: [3.8, 3.9, "3.10", "3.11", "3.12"]
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
+    - uses: actions/checkout@v4
+    - name: Set up PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: true
+          prerelease: true
+    - name: Ensure lock file is up to date
+        run: |
+          pdm lock --check
+
     - name: Install dependencies
       run: |
-        python -m pip install --no-cache-dir --prefer-binary --upgrade pip
-        pip install --no-cache-dir --prefer-binary -r requirements.txt -r requirements-dev.txt
-    - name: Checking the code syntax
+        pdm sync -d
+
+    - name: Run Lint
       run: |
-        pylama controller.py
-    - name: Run tests
+        pdm run lint
+
+    - name: Run Tests
       run: |
-        pytest -s tests/
+        pdm run pytest
 
   ci:
     runs-on: ubuntu-latest
@@ -31,20 +38,19 @@ jobs:
     - test
     steps:
       - name: 'Checkout'
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
       - name: 'Kustomize Build'
         uses: karancode/kustomize-github-action@master
         with:
-          kustomize_version: '4.5.2'
+          kustomize_version: '5.3.0'
           kustomize_build_dir: './manifests/overlays/generic-rbac'
           kustomize_output_file: "operator.yaml"
           enable_alpha_plugins: false
-      - name: 'Start K3s lightweight Kubernetes cluster'
-        uses: debianmaster/actions-k3s@v1.0.1
-        id: k3s
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1
         with:
-          version: 'v1.21.2-k3s1'
-      - name: 'Check K3s server is up&running'
+          kubectl_version: "v1.28.6"
+      - name: 'Check K8s server is up&running'
         run: |
           sleep 10
           kubectl get nodes
