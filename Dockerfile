@@ -1,25 +1,42 @@
-FROM python:3.10-alpine
+FROM ubuntu:rolling AS build-venv
 
-ADD requirements.txt requirements.txt
-RUN apk add --no-cache --virtual build-deps gcc g++ linux-headers make \
-        linux-headers musl-dev && \
-    pip install --prefer-binary --no-cache-dir -q -U pip && \
-    pip install --prefer-binary --no-cache-dir -r requirements.txt && \
-    rm -rf /tmp/* /root/.cache && \
-    apk del build-deps
+ARG DEBIAN_FRONTEND=noninteractive
 
+RUN groupadd -g 1001 svc && useradd -r -u 1001 -g svc svc
 
-RUN addgroup --gid 1001 svc
-RUN adduser --disabled-password --home /home/svc --uid 1001 --ingroup svc svc
+COPY pyproject.toml pdm.lock /home/svc/
+RUN apt-get update && \
+    apt-get install -y python3.11 && \
+    apt-get install -y --no-install-recommends curl python3.11-venv build-essential gcc && \
+    curl -sSL https://raw.githubusercontent.com/pdm-project/pdm/main/install-pdm.py | python3.11 - && \
+    export PATH="$PATH:/root/.local/bin" && \
+    pdm self update && \
+    cd /home/svc/ && \
+    pdm venv create python3.11 && \
+    pdm use .venv && \
+    pdm update --no-editable --prod --no-self --no-lock && \
+    chown --recursive svc:svc /home/svc/.venv  && \
+    apt-get remove -y build-essential gcc && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+FROM ubuntu:rolling
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y python3.11 && \
+    groupadd -g 1001 svc && \
+    useradd -m -u 1001 -g svc svc && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=build-venv --chown=svc:svc /home/svc/.venv/ /home/svc/.venv
 
 WORKDIR /home/svc
-ADD controller.py controller.py
-RUN chown svc:svc /home/svc/controller.py
-
-# Any non-zero number will do, and unfortunately a named user will not,
-# as k8s pod securityContext runAsNonRoot can't resolve the user ID:
-# https://github.com/kubernetes/kubernetes/issues/40958
 USER 1001
+ENV PATH="/home/svc/.venv/bin:${PATH}" 
+
+ADD --chown=svc:svc controller.py /home/svc/controller.py
 
 ENTRYPOINT ["kopf"]
 CMD ["run", "--namespace", "chaostoolkit-crd", "controller.py"]

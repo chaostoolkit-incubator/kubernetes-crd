@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Switched to `pdm` for project management
 * Removed Pod Security Policy support since they have been deprecated some time
   ago now
+* Switched base image of the container to `ubuntu`
 
 ## [0.7.0][] - 2022-03-09
 
