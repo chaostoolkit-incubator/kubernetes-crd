@@ -14,7 +14,8 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
     assert resource["metadata"]["labels"] == {
         "app": "chaostoolkit-crd",
         "provider": "chaostoolkit",
-        "role": "chaosengineering"
+        "role": "chaosengineering",
+        "app.kubernetes.io/name": "chaostoolkit"
     }
 
     resource = generic[1]
@@ -29,7 +30,8 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
     assert resource["metadata"]["labels"] == {
         "app": "chaostoolkit-crd",
         "provider": "chaostoolkit",
-        "role": "chaosengineering"
+        "role": "chaosengineering",
+        "app.kubernetes.io/name": "chaostoolkit"
     }
     assert resource["spec"]["scope"] == "Namespaced"
     assert resource["spec"]["group"] == "chaostoolkit.org"
@@ -70,7 +72,8 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
     assert resource["metadata"]["labels"] == {
         "app": "chaostoolkit-crd",
         "provider": "chaostoolkit",
-        "role": "chaosengineering"
+        "role": "chaosengineering",
+        "app.kubernetes.io/name": "chaostoolkit"
     }
 
     resource = generic[4]
@@ -81,7 +84,8 @@ def test_create_chaos_experiment_in_default_ns(generic: List['Resource']):
     assert resource["metadata"]["labels"] == {
         "app": "chaostoolkit-crd",
         "provider": "chaostoolkit",
-        "role": "chaosengineering"
+        "role": "chaosengineering",
+        "app.kubernetes.io/name": "chaostoolkit"
     }
     ctk_ns = yaml.safe_load(resource["data"]["chaostoolkit-ns.yaml"])
     assert ctk_ns["apiVersion"] == "v1"
