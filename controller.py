@@ -1,6 +1,6 @@
 import hashlib
 import logging
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, Dict, List, Union
 
 import kopf
 from kopf._cogs.structs import bodies
@@ -30,7 +30,6 @@ async def create_chaos_experiment(  # noqa: C901
     """
     v1 = client.CoreV1Api()
     v1rbac = client.RbacAuthorizationV1Api()
-    v1policy = client.PolicyV1beta1Api()
     v1cron = client.BatchV1Api()
 
     name_suffix = generate_name_suffix(body)

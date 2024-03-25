@@ -59,7 +59,7 @@ docstring-code-format = false
 
 [tool.pdm.scripts]
 lint = {composite = ["ruff check controller.py"]}
-format = {composite = ["ruff format controller.py"]}
+format = {composite = ["ruff format controller.py", "ruff check --fix controller.py"]}
 test = {cmd = "pytest"}
 
 [tool.pytest.ini_options]
