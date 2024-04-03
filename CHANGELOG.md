@@ -3,7 +3,16 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.9.0...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.10.0...HEAD
+
+## [0.10.0][] - 2024-04-03
+
+[0.10.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.9.0...0.10.0
+
+### Changed
+
+* Increased CPU/Memory requests and limits for Chaos Toolkit pods so that
+  more resource intensive experiments can run fine
 
 ## [0.9.0][] - 2024-03-25
 
