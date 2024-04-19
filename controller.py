@@ -402,7 +402,7 @@ def set_chaos_cmd_path(
                 break
 
 
-def set_verbose_chaos(pod_tpl: Dict[str, Any], image_name: str):
+def set_verbose_chaos(pod_tpl: Dict[str, Any]):
     """
     Make the Chaos Toolkit verbose
     """  # noqa: E501

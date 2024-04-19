@@ -3,7 +3,15 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.12.1...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.12.2...HEAD
+
+## [0.12.2][] - 2024-04-19
+
+[0.12.2]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.12.1...0.12.2
+
+### Fixed
+
+* Fixed function signature
 
 ## [0.12.1][] - 2024-04-19
 
