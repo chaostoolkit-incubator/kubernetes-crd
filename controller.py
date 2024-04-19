@@ -388,6 +388,19 @@ def set_chaos_cmd_args(pod_tpl: Dict[str, Any], cmd_args: List[str]):
                 container["args"][-1] = new_cmd
 
 
+def set_chaos_cmd_path(
+    pod_tpl: Dict[str, Any], cmd_path: str = "/usr/local/bin/chaos"
+):
+    """
+    Set the command line path for the chaos command
+    """  # noqa: E501
+    spec = pod_tpl["spec"]
+    for container in spec["containers"]:
+        if container["name"] == "chaostoolkit":
+            if "chaos" in container["command"][0]:
+                container["command"] = cmd_path
+
+
 def set_cron_job_name(cron_tpl: Dict[str, Any], name_suffix: str) -> str:
     """
     Set the name of the cron job
@@ -776,6 +789,7 @@ async def create_pod(
             "configMapExperimentFileName", "experiment.json"
         )
         cmd_args = pod_spec.get("chaosArgs", [])
+        cmd_path = pod_spec.get("chaosCommandPath", "/usr/local/bin/chaos")
 
         # if image name is not given in CRO,
         # we keep the one defined by default in pod template from configmap
@@ -826,6 +840,10 @@ async def create_pod(
                 f"$ chaos {' '.join([str(arg) for arg in cmd_args])}"
             )
             set_chaos_cmd_args(tpl, cmd_args)
+
+        if cmd_path:
+            logger.info(f"Override default chaos command path to '{cmd_path}'")
+            set_chaos_cmd_path(tpl, cmd_path)
     else:
         logger.debug(
             "Using provided deployment template for the run ending with "
