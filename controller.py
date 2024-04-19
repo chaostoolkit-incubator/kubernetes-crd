@@ -388,17 +388,25 @@ def set_chaos_cmd_args(pod_tpl: Dict[str, Any], cmd_args: List[str]):
                 container["args"][-1] = new_cmd
 
 
-def set_chaos_cmd_path(
-    pod_tpl: Dict[str, Any], cmd_path: str = "/usr/local/bin/chaos"
-):
+def set_chaos_cmd_path(pod_tpl: Dict[str, Any]):
     """
-    Set the command line path for the chaos command
+    Make the Chaos Toolkit verbose
     """  # noqa: E501
     spec = pod_tpl["spec"]
     for container in spec["containers"]:
         if container["name"] == "chaostoolkit":
             if "chaos" in container["command"][0]:
-                container["command"] = [cmd_path]
+                container["args"].insert(0, "--verbose")
+
+
+def set_verbose_chaos(pod_tpl: Dict[str, Any], image_name: str):
+    """
+    Set the image of the container.
+    """
+    for container in pod_tpl["spec"]["containers"]:
+        if container["name"] == "chaostoolkit":
+            container["image"] = image_name
+            break
 
 
 def set_cron_job_name(cron_tpl: Dict[str, Any], name_suffix: str) -> str:
@@ -755,6 +763,7 @@ async def create_pod(
 ):
     logger = logging.getLogger("kopf.objects")
 
+    verbose_ctk = cro_spec.get("verbose", False)
     pod_spec = cro_spec.get("pod", {})
     sa_name = cro_spec.get("serviceaccount", {}).get("name")
     env_cm_name = pod_spec.get("env", {}).get(
@@ -844,6 +853,9 @@ async def create_pod(
         if cmd_path:
             logger.info(f"Override default chaos command path to '{cmd_path}'")
             set_chaos_cmd_path(tpl, cmd_path)
+
+        if verbose_ctk:
+            set_verbose_chaos(tpl)
     else:
         logger.debug(
             "Using provided deployment template for the run ending with "

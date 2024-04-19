@@ -3,7 +3,15 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.11.2...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.12.0...HEAD
+
+## [0.12.0][] - 2024-04-19
+
+[0.12.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.11.2...0.12.0
+
+### Added
+
+* Added a flag to make the run `verbose`
 
 ## [0.11.2][] - 2024-04-19
 
