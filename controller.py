@@ -398,7 +398,7 @@ def set_chaos_cmd_path(
     for container in spec["containers"]:
         if container["name"] == "chaostoolkit":
             if "chaos" in container["command"][0]:
-                container["command"] = cmd_path
+                container["command"] = [cmd_path]
 
 
 def set_cron_job_name(cron_tpl: Dict[str, Any], name_suffix: str) -> str:

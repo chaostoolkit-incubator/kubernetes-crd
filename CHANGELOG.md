@@ -3,7 +3,15 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.11.0...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.11.1...HEAD
+
+## [0.11.1][] - 2024-04-19
+
+[0.11.1]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.11.0...0.11.1
+
+### Fixed
+
+* A container command is a list of string, not just a single string
 
 ## [0.11.0][] - 2024-04-19
 
