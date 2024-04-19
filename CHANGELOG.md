@@ -10,6 +10,10 @@
 * A new `spec.pod.chaosCommandPath` setting to change the command entry point for
   the `chaos` command. This can change in container images.
 
+### Changed
+
+* Bump dependencies
+
 ## [0.10.0][] - 2024-04-03
 
 [0.10.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.9.0...0.10.0
