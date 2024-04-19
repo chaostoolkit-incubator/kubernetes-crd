@@ -8,6 +8,7 @@
 ### Changed
 
 * Build the operator image for arm64 and amd64 now
+* Add sbom to operator image
 
 ## [0.11.1][] - 2024-04-19
 
