@@ -789,7 +789,7 @@ async def create_pod(
             "configMapExperimentFileName", "experiment.json"
         )
         cmd_args = pod_spec.get("chaosArgs", [])
-        cmd_path = pod_spec.get("chaosCommandPath", "/usr/local/bin/chaos")
+        cmd_path = pod_spec.get("chaosCommandPath", None)
 
         # if image name is not given in CRO,
         # we keep the one defined by default in pod template from configmap
