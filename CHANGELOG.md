@@ -5,6 +5,10 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.11.1...HEAD
 
+### Changed
+
+* Build the operator image for arm64 and amd64 now
+
 ## [0.11.1][] - 2024-04-19
 
 [0.11.1]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.11.0...0.11.1
