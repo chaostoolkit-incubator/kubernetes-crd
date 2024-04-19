@@ -388,7 +388,21 @@ def set_chaos_cmd_args(pod_tpl: Dict[str, Any], cmd_args: List[str]):
                 container["args"][-1] = new_cmd
 
 
-def set_chaos_cmd_path(pod_tpl: Dict[str, Any]):
+def set_chaos_cmd_path(
+    pod_tpl: Dict[str, Any], cmd_path: str = "/usr/local/bin/chaos"
+):
+    """
+    Set the command line path for the chaos command
+    """  # noqa: E501
+    spec = pod_tpl["spec"]
+    for container in spec["containers"]:
+        if container["name"] == "chaostoolkit":
+            if "chaos" in container["command"][0]:
+                container["command"] = [cmd_path]
+                break
+
+
+def set_verbose_chaos(pod_tpl: Dict[str, Any], image_name: str):
     """
     Make the Chaos Toolkit verbose
     """  # noqa: E501
@@ -397,16 +411,7 @@ def set_chaos_cmd_path(pod_tpl: Dict[str, Any]):
         if container["name"] == "chaostoolkit":
             if "chaos" in container["command"][0]:
                 container["args"].insert(0, "--verbose")
-
-
-def set_verbose_chaos(pod_tpl: Dict[str, Any], image_name: str):
-    """
-    Set the image of the container.
-    """
-    for container in pod_tpl["spec"]["containers"]:
-        if container["name"] == "chaostoolkit":
-            container["image"] = image_name
-            break
+                break
 
 
 def set_cron_job_name(cron_tpl: Dict[str, Any], name_suffix: str) -> str:
