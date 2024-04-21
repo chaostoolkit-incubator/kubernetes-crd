@@ -5,6 +5,10 @@
 
 [Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.12.2...HEAD
 
+### Changed
+
+* Try to make code a bit more async
+
 ## [0.12.2][] - 2024-04-19
 
 [0.12.2]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.12.1...0.12.2
