@@ -3,7 +3,16 @@
 
 ## [Unreleased][]
 
-[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.13.0...HEAD
+[Unreleased]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.14.0...HEAD
+
+## [0.14.0][] - 2024-04-22
+
+[0.14.0]: https://github.com/chaostoolkit-incubator/kubernetes-crd/compare/0.13.0...0.14.0
+
+### Changed
+
+* Switched to `chaos` as the base command instead of `/usr/local/bin/chaos`
+  to better tolerate different container images entrypoints
 
 ## [0.13.0][] - 2024-04-21
 

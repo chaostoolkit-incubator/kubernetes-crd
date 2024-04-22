@@ -363,11 +363,11 @@ def set_chaos_cmd_args(pod_tpl: Dict[str, Any], cmd_args: List[str]):
         - "/bin/sh"
         args:
         - "-c"
-        - "/usr/local/bin/chaos run ${EXPERIMENT_PATH-$EXPERIMENT_URL} && exit $?"
+        - "chaos run ${EXPERIMENT_PATH-$EXPERIMENT_URL} && exit $?"
     -> we need to inject the arguments into the last args command line string
     * New style:
         command:
-        - "/usr/local/bin/chaos"
+        - "chaos"
         args:
         - run
         - $(EXPERIMENT_PATH)
@@ -387,15 +387,11 @@ def set_chaos_cmd_args(pod_tpl: Dict[str, Any], cmd_args: List[str]):
             else:
                 # legacy syntax: pod command is a new shell
                 args_as_str = " ".join(cmd_args)
-                new_cmd = "/usr/local/bin/chaos {args} && exit $?".format(
-                    args=args_as_str
-                )
+                new_cmd = "chaos {args} && exit $?".format(args=args_as_str)
                 container["args"][-1] = new_cmd
 
 
-def set_chaos_cmd_path(
-    pod_tpl: Dict[str, Any], cmd_path: str = "/usr/local/bin/chaos"
-):
+def set_chaos_cmd_path(pod_tpl: Dict[str, Any], cmd_path: str = "chaos"):
     """
     Set the command line path for the chaos command
     """  # noqa: E501

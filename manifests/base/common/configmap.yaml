@@ -88,7 +88,7 @@ data:
         image: chaostoolkit/chaostoolkit
         imagePullPolicy: Always
         command:
-        - /usr/local/bin/chaos
+        - chaos
         args:
         - run
         - $(EXPERIMENT_PATH)
